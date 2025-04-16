@@ -1,1 +1,1 @@
-# VidScribe
+# VidScript
