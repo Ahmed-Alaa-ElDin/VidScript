@@ -1,0 +1,326 @@
+// Module for UI styling
+const StyleManager = (() => {
+    // Create and inject styles
+    const injectStyles = () => {
+        const style = document.createElement("style");
+        style.id = "vidscript-styles";
+        style.textContent = /*css*/ `
+        #vidscript-wrapper {
+            display: inline-flex !important;
+            border-radius: 8px !important;
+            background: radial-gradient(60% 80% at 50% 100%, #999c, #666c) !important;
+            padding: 0 !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: relative;
+            top: -17px;
+            margin: 0 8px !important;
+            transition: background 0.3s ease;
+            cursor: pointer;
+        }
+
+        #vidscript-wrapper:hover {
+            background: radial-gradient(60% 80% at 50% 100%, #AAAA, #888c) !important;
+        }
+
+        #vidscript-wrapper.checked {
+            background: radial-gradient(60% 80% at 50% 100%, rgb(206, 81, 81), #666c) !important;
+        }
+
+        #vidscript-wrapper span {
+            height: max-content !important;
+            line-height: normal !important;
+            font-weight: 500 !important;
+            font-size: 14px !important;
+            color: white !important;
+        }
+
+        #vidscript-toggler-wrapper {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            border-right: 1px solid rgba(255, 255, 255, .12) !important;
+            padding: 7px 8px !important;
+            cursor: pointer !important;
+        }
+
+        #vidscript-menu-button {
+            background: transparent !important;
+            border: none !important;
+            padding: 7px 8px !important;
+            cursor: pointer !important;
+            color: white !important;
+        }
+
+        #vidscript-switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: sans-serif;
+            background-color: transparent;
+            border-radius: 20px;
+            color: #fff;
+            width: fit-content;
+        }
+
+        #vidscript-switch-label {
+            position: relative;
+            display: inline-block;
+            width: 30px;
+            height: 16px;
+            background: #0a0d3330;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        #vidscript-wrapper.checked #vidscript-switch-label {
+            background: rgba(177, 23, 23, 0.16);
+        }
+
+        #vidscript-toggle {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        #vidscript-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            border-radius: 34px;
+            transition: 0.3s;
+        }
+
+        #vidscript-slider:before {
+            position: absolute;
+            content: "";
+            height: 12px;
+            width: 12px;
+            left: 2px;
+            top: 2px;
+            background-color: #979797;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        #vidscript-toggle:checked + #vidscript-slider:before {
+            transform: translateX(14px);
+            background-color: #fff;
+        }
+
+        #vidscript-toggle:checked + #vidscript-slider {
+            background-color: #b84b4b;
+        }
+
+        #vidscript-overlay {
+            position: absolute;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        #vidscript-menu {   
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: #222;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 2000;
+            width: 250px;
+            padding: 8px 12px;
+            color: white;
+            font-family: sans-serif;
+            display: none;
+        }
+
+        #vidscript-menu.active {
+            display: block;
+        }
+
+        .vidscript-menu-item {
+            padding: 8px 12px;
+            margin: 4px 0;
+            display: flex;
+            line-height: normal;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 4px;
+        }
+
+        .vidscript-menu-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .vidscript-menu-header {
+            font-weight: bold;
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 8px;
+            line-height: normal;
+            font-size: 14px;
+        }
+        
+        #vidscript-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 4px;
+            z-index: 9999;
+            font-weight: bold;
+            transition: opacity 0.3s ease-in-out;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .vidscript-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1500;
+            background: rgba(0,0,0,0.5);
+            display: none;
+        }
+        
+        .vidscript-backdrop.active {
+            display: block;
+        }
+        
+        #vidscript-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #222;
+            border-radius: 8px;
+            padding: 20px;
+            color: white;
+            z-index: 2000;
+            width: 500px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: none;
+        }
+        
+        #vidscript-modal.active {
+            display: block;
+        }
+        
+        .vidscript-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            gap: 10px;
+        }
+        
+        .vidscript-modal-header h3 {
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .vidscript-close-button {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            width: auto;
+            padding: 0;
+            font-size: 18px;
+        }
+        
+        .vidscript-modal-content {
+            margin-bottom: 16px;
+        }
+        
+        .vidscript-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        
+        .vidscript-button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+        
+        .vidscript-button-primary {
+            background: #b84b4b;
+            color: white;
+        }
+        
+        .vidscript-button-primary:hover {
+            background: #d75a5a;
+        }
+        
+        .vidscript-button-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .vidscript-button-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        #vidscript-extracted-text {
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+            padding: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+            margin-bottom: 16px;
+        }
+        
+        .vidscript-tooltip {
+            position: relative;
+            cursor: help;
+        }
+        
+        .vidscript-tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 100;
+        }
+    `;
+        document.head.appendChild(style);
+    };
+
+    return {
+        injectStyles,
+        removeStyles: () => {
+            const existingStyle = document.getElementById("vidscript-styles");
+            if (existingStyle) {
+                existingStyle.remove();
+            }
+        },
+    };
+})();
+
+export default StyleManager;
