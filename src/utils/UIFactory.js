@@ -58,7 +58,7 @@ const UIFactory = (() => {
         const wrapper = document.createElement("div");
         wrapper.id = buttonId;
         wrapper.title = title;
-        wrapper.className = ConfigManager.get("settings.extract") ? "checked" : "";
+        wrapper.className = ConfigManager.getCurrentStatus() === "READY" ? "checked" : "";
 
         // Create toggler wrapper
         const togglerWrapper = document.createElement("label");
@@ -83,7 +83,7 @@ const UIFactory = (() => {
         const toggle = document.createElement("input");
         toggle.id = "vidscript-toggle";
         toggle.type = "checkbox";
-        toggle.checked = ConfigManager.get("settings.extract");
+        toggle.checked = ConfigManager.getCurrentStatus() === "READY" ? true : false;
 
         const slider = document.createElement("span");
         slider.id = "vidscript-slider";
@@ -175,7 +175,7 @@ const UIFactory = (() => {
         // Create backdrop
         const backdrop = document.createElement("div");
         backdrop.className = "vidscript-backdrop active";
-        
+
         // Create modal
         const modal = document.createElement("div");
         modal.id = "vidscript-modal";
@@ -186,7 +186,7 @@ const UIFactory = (() => {
             document.body.removeChild(backdrop);
             document.body.removeChild(modal);
         });
-        
+
         // Modal header
         const header = document.createElement("div");
         header.className = "vidscript-modal-header";
@@ -220,7 +220,7 @@ const UIFactory = (() => {
         const footer = document.createElement("div");
         footer.className = "vidscript-modal-footer";
 
-        // Create buttons 
+        // Create buttons
         for (const button of buttons) {
             const buttonElement = document.createElement("button");
             buttonElement.className = button.classNames;
@@ -274,11 +274,74 @@ const UIFactory = (() => {
         return statusElement;
     };
 
+    // Create the video overlay
+    const createVideoOverlay = (frameData) => {
+        const videoContainer = document.querySelector(".html5-video-container");
+        if (!videoContainer) return false;
+
+        // Remove old overlay
+        const existingOverlay = document.getElementById("vidscript-overlay");
+        if (existingOverlay) existingOverlay.remove();
+
+        // Remove old border
+        const existingBorder = document.getElementById("vidscript-border");
+        if (existingBorder) existingBorder.remove();
+
+        // Create container
+        const overlay = document.createElement("div");
+        overlay.id = "vidscript-overlay";
+        overlay.style.width = `${frameData.width}px`;
+        overlay.style.height = `${frameData.height}px`;
+        overlay.style.left = `${frameData.left}px`;
+        overlay.style.top = `${frameData.top}px`;
+
+        // Image layer
+        const inner = document.createElement("div");
+        inner.id = "vidscript-overlay-inner";
+        inner.style.background = `url(${frameData.dataUrl}) no-repeat center center`;
+
+        // Magic sparkle line
+        const sparkle = document.createElement("div");
+        sparkle.id = "vidscript-sparkle";
+
+        const borderOverlay = document.createElement("div");
+        borderOverlay.id = "vidscript-border";
+        borderOverlay.style.left = `${frameData.left}px`;
+        borderOverlay.style.top = `${frameData.top}px`;
+        borderOverlay.style.width = `${frameData.width}px`;
+        borderOverlay.style.height = `${frameData.height}px`;
+
+        // Add to DOM
+        overlay.appendChild(inner);
+        overlay.appendChild(sparkle);
+        videoContainer.appendChild(overlay);
+        videoContainer.appendChild(borderOverlay);
+
+        console.log("✅ Overlay is gradually revealed with magic effect");
+        return true;
+    };
+
+    // Remove overlay
+    const removeVideoOverlay = () => {
+        const overlay = document.getElementById("vidscript-overlay");
+        const sparkle = document.getElementById("vidscript-sparkle");
+        const borderOverlay = document.getElementById("vidscript-border");
+
+        if (overlay) overlay.remove();
+        if (sparkle) sparkle.remove();
+        if (borderOverlay) borderOverlay.remove();
+
+        console.log("✅ Overlay is gradually hidden with magic effect");
+        return true;
+    };
+
     return {
         createMainButton,
         createSettingsMenu,
         createModal,
         createNotification,
+        createVideoOverlay,
+        removeVideoOverlay,
     };
 })();
 

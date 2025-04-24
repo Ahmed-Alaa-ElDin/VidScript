@@ -28,6 +28,9 @@ const VidScriptApp = (() => {
                 DOMManager.setupButtonObserver();
             }
 
+            // Set up video resize observer
+            DOMManager.setupVideoObserverWhenReady();
+
             // Set up navigation watcher
             DOMManager.setupNavigationWatcher();
 
@@ -42,6 +45,41 @@ const VidScriptApp = (() => {
 
     // Set up event handlers
     const setupEventHandlers = () => {
+        // Set up status change event
+        EventManager.on("add-overlay", async () => {
+            console.log("🎬 Adding overlay...");
+
+            // Add overlay
+            try {
+                // Pause video
+                VideoManager.pauseVideo();
+
+                // Capture current frame
+                const frameData = await VideoManager.captureCurrentFrame();
+
+                // Add overlay
+                UIFactory.createVideoOverlay(frameData);
+            } catch (error) {
+                console.error("❌ Error adding overlay:", error);
+            }
+        });
+
+        // Remove overlay
+        EventManager.on("remove-overlay", async () => {
+            console.log("🎬 Removing overlay...");
+
+            // Remove overlay
+            try {
+                // Resume video
+                VideoManager.playVideo();
+
+                // Remove overlay
+                UIFactory.removeVideoOverlay();
+            } catch (error) {
+                console.error("❌ Error removing overlay:", error);
+            }
+        });
+
         // // Extract text button click
         // EventManager.on("extract-text", async () => {
         //     try {

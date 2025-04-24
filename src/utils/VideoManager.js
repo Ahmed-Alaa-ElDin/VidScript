@@ -81,7 +81,7 @@ const VideoManager = (() => {
     };
 
     // Capture current frame from video
-    const captureCurrentFrame = () => {
+    const captureCurrentFrame = async () => {
         return new Promise((resolve, reject) => {
             try {
                 const video = document.querySelector("video");
@@ -90,8 +90,11 @@ const VideoManager = (() => {
                 }
 
                 const canvas = document.createElement("canvas");
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
+                canvas.style.position = "absolute";
+
+                // Set canvas dimensions to match video
+                canvas.width = parseInt(video.style.width) || video.videoWidth;
+                canvas.height = parseInt(video.style.height) || video.videoHeight;
 
                 const ctx = canvas.getContext("2d");
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -100,8 +103,10 @@ const VideoManager = (() => {
                 resolve({
                     canvas,
                     dataUrl: canvas.toDataURL("image/png"),
-                    width: canvas.width,
-                    height: canvas.height,
+                    width: parseInt(video.style.width) || video.videoWidth,
+                    height: parseInt(video.style.height) || video.videoHeight,
+                    top: parseInt(video.style.top) || video.offsetTop,
+                    left: parseInt(video.style.left) || video.offsetLeft,
                     timestamp: getCurrentTime(),
                 });
             } catch (error) {

@@ -8,6 +8,8 @@ import EventManager from "./EventManager.js";
 const DOMManager = (() => {
     let buttonObserver = null;
     let navigateInterval = null;
+    let resizeObserver = null;
+    let lastVideoSize = { width: 0, height: 0 };
 
     // Insert button into YouTube player
     const insertButton = () => {
@@ -41,25 +43,6 @@ const DOMManager = (() => {
 
     // Set up button event listeners
     const setupButtonEvents = (button, menu) => {
-        // Toggle button
-        const toggle = button.querySelector("#vidscript-toggle");
-        toggle.addEventListener("change", (e) => {
-            const checked = e.target.checked;
-            ConfigManager.update("states.extract", checked);
-            button.classList.toggle("checked", checked);
-
-            if (checked) {
-                VideoManager.createVideoOverlay();
-            } else {
-                VideoManager.cleanupVideoOverlay();
-            }
-
-            NotificationManager.show(
-                `Extraction ${checked ? "started" : "stopped"}`,
-                checked ? "success" : "info"
-            );
-        });
-
         // Menu button click
         const menuButton = button.querySelector("#vidscript-menu-button");
         menuButton.addEventListener("click", (e) => {
@@ -77,13 +60,24 @@ const DOMManager = (() => {
         });
 
         // Main button click - extract text
-        button.addEventListener("click", (e) => {
+        const toggler = button.querySelector("#vidscript-toggle");
+        toggler.addEventListener("change", (e) => {
             // Avoid triggering when clicking on menu button or toggle
-            if (e.target.id === "vidscript-menu-button" || e.target.id === "vidscript-toggle") {
+            if (e.target.id === "vidscript-menu-button") {
                 return;
             }
 
-            EventManager.emit("extract-text");
+            // get the current status
+            const currentStatus = ConfigManager.getCurrentStatus();
+
+            // if the current status is OFF, trigger creating video overlay
+            if (currentStatus == "OFF") {
+                button.classList.add("checked");
+                ConfigManager.updateStatus("READY");
+            } else {
+                button.classList.remove("checked");
+                ConfigManager.updateStatus("OFF");
+            }
         });
     };
 
@@ -197,6 +191,122 @@ const DOMManager = (() => {
         return navigateInterval;
     };
 
+    const setupVideoObserverWhenReady = () => {
+        const observer = new MutationObserver(() => {
+            const videoElement = document.querySelector("video");
+            const videoContainer = document.querySelector("#movie_player");
+
+            if (videoElement && videoContainer) {
+                console.log("🎬 Video found. Initializing resize observer...");
+                setupVideoResizeObserver();
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+        });
+    };
+
+    // Set up observer to watch for video size changes
+    const setupVideoResizeObserver = () => {
+        // Clean up existing observer
+        if (resizeObserver) {
+            resizeObserver.disconnect();
+        }
+
+        // Find video element
+        const videoElement = document.querySelector("video");
+        if (!videoElement) {
+            console.log("⚠️ Video element not found for resize observer");
+            return null;
+        }
+
+        // Find video container
+        const videoContainer = document.querySelector("#movie_player");
+        if (!videoContainer) {
+            console.log("⚠️ Video container not found for resize observer");
+            return null;
+        }
+
+        // Store initial video size
+        lastVideoSize = {
+            width: videoContainer.offsetWidth,
+            height: videoContainer.offsetHeight,
+        };
+
+        // Create resize observer
+        resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const newWidth = entry.contentRect.width;
+                const newHeight = entry.contentRect.height;
+
+                // Check if size has meaningfully changed (by more than 5px)
+                if (
+                    Math.abs(newWidth - lastVideoSize.width) > 5 ||
+                    Math.abs(newHeight - lastVideoSize.height) > 5
+                ) {
+                    lastVideoSize = { width: newWidth, height: newHeight };
+
+                    // Dispatch custom event for other components to listen to
+                    if (ConfigManager.getCurrentStatus() === "READY") {
+                        EventManager.emit("add-overlay");
+                    }
+
+                    console.log(`📏 Video resized: ${newWidth}x${newHeight}`);
+                }
+            }
+        });
+
+        // Start observing the video container
+        resizeObserver.observe(videoContainer);
+        console.log("👁️ Video resize observer started");
+
+        return resizeObserver;
+    };
+
+    // Update UI elements based on video size
+    const updateUIOnResize = (videoSize) => {
+        // Notify EventManager about the resize
+        EventManager.emit("videoResize", videoSize);
+
+        // Get current active overlays or UI elements
+        const overlays = document.querySelectorAll(".vidscript-overlay");
+        if (overlays.length > 0) {
+            overlays.forEach((overlay) => {
+                // Update overlay position and size based on video dimensions
+                overlay.style.width = `${videoSize.width}px`;
+                overlay.style.height = `${videoSize.height}px`;
+            });
+        }
+
+        // Update settings menu position if needed
+        const settingsMenu = document.querySelector("#vidscript-menu");
+        if (settingsMenu && settingsMenu.classList.contains("active")) {
+            // Ensure menu stays within viewport
+            const menuRect = settingsMenu.getBoundingClientRect();
+            if (menuRect.right > window.innerWidth) {
+                settingsMenu.style.right = "0px";
+                settingsMenu.style.left = "auto";
+            }
+        }
+
+        // Notify user if in debug mode
+        if (ConfigManager.get("debugMode")) {
+            NotificationManager.show(
+                `Video resized: ${videoSize.width}×${videoSize.height}`,
+                "info",
+                2000
+            );
+        }
+    };
+
+    // Get current video dimensions
+    const getVideoSize = () => {
+        return { ...lastVideoSize };
+    };
+
     // Clean up all observers and intervals
     const cleanup = () => {
         if (buttonObserver) {
@@ -217,6 +327,10 @@ const DOMManager = (() => {
         insertButton,
         setupButtonObserver,
         setupNavigationWatcher,
+        setupVideoObserverWhenReady,
+        setupVideoResizeObserver,
+        updateUIOnResize,
+        getVideoSize,
         cleanup,
     };
 })();
