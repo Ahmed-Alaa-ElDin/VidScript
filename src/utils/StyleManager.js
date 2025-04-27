@@ -24,7 +24,7 @@ const StyleManager = (() => {
             }
 
             #vidscript-wrapper.checked {
-                background: radial-gradient(60% 80% at 50% 100%, rgb(206, 81, 81), #666c) !important;
+                background: radial-gradient(60% 80% at 50% 100%, #b84b4b, #666c) !important;
             }
 
             #vidscript-wrapper span {
@@ -118,13 +118,6 @@ const StyleManager = (() => {
                 background-color: #b84b4b;
             }
 
-            #vidscript-overlay{
-                position: absolute;
-                overflow: hidden;
-                z-index: 9999;
-                pointer-events: none;
-            }
-
             #vidscript-menu {   
                 position: absolute;
                 bottom: 100%;
@@ -167,7 +160,7 @@ const StyleManager = (() => {
                 font-size: 14px;
             }
             
-            #vidscript-status {
+            #vidscript-state {
                 position: fixed;
                 bottom: 20px;
                 right: 20px;
@@ -310,6 +303,13 @@ const StyleManager = (() => {
                 z-index: 100;
             }
 
+            #vidscript-overlay{
+                position: absolute;
+                overflow: hidden;
+                z-index: 9999;
+                pointer-events: auto;
+            }
+
             #vidscript-overlay-inner {
                 background-size: cover;
                 width: 100% !important;
@@ -349,7 +349,88 @@ const StyleManager = (() => {
                 -webkit-mask-size: 100% 100%;
                 animation: revealBorder 2s ease-out forwards;
             }
-            
+
+            #vidscript-selection-tools-wrapper {
+                position: absolute;
+                transform: translateY(-50%);
+                top:50%;
+                left: 10px;
+                z-index: 10002;
+                pointer-events: none;
+                background: #888888cc;
+                padding: 6px 14px;
+                border-radius: 10px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+            }
+
+            #vidscript-selector-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 6px;
+                cursor: pointer;
+                pointer-events: auto;
+            }
+
+            #vidscript-selector-toggle-button {
+                width: 30px;
+                height: 16px;
+                background: #ff4f4f;
+                border-radius: 8px;
+                position: relative;
+                cursor: pointer;
+                transition: background 0.3s ease;        
+            }
+
+            #vidscript-selector-toggle-circle {
+                width: 14px;
+                height: 14px;
+                background: white;
+                border-radius: 50%;
+                position: absolute;
+                top: 1px;
+                left: 1px;
+                transition: left 0.3s;
+            }
+
+            #vidscript-selector-toggle-label {
+                color: white;
+                font-weight: bold;
+                height: 20px;
+                width: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 0;
+            }
+
+            #vidscript-full-screen-selector {
+                width: 100%;
+                background: #ff4f4f;
+                box-shadow: 0 0 8px 1px #888888cc;
+                border-radius: 8px;
+                padding: 5px 0;
+                position: relative;
+                cursor: pointer;
+                transition: background 0.3s ease;   
+                display: flex;     
+                align-items: center;
+                justify-content: center;
+                line-height: 0;
+                overflow: hidden;
+                cursor: pointer;
+                z-index: 10002;
+                pointer-events: auto;
+            }
+
+            #vidscript-full-screen-selector:hover {
+                background:rgb(255, 59, 59);
+            }
+
             @keyframes revealBorder {
                 0% {
                     mask-image: linear-gradient(to top, black 0%, transparent 0%);

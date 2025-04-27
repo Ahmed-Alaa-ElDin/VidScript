@@ -146,6 +146,11 @@ const VideoManager = (() => {
         const video = document.querySelector("video");
         if (!video) return false;
 
+        // Handle play event
+        video.addEventListener("play", () => {
+            EventManager.emit("video-played");
+        });
+
         // Handle pause event
         video.addEventListener("pause", () => {
             if (ConfigManager.get("settings.extractOnPause")) {

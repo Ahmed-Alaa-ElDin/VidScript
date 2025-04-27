@@ -2,7 +2,8 @@ import EventManager from "./EventManager.js";
 
 // Module for configuration settings
 const ConfigManager = (() => {
-    const statuses = ["OFF", "READY", "EXTRACTING", "DONE"];
+    const states = ["OFF", "READY", "EXTRACTING", "DONE"];
+    const selectorStates = ["rectangle", "freehand"];
 
     // Core configuration with defaults
     const config = {
@@ -32,8 +33,15 @@ const ConfigManager = (() => {
             textColor: "rgba(255, 255, 255, 0.9)",
             overlayBackground: "rgba(0, 0, 0, 0.6)",
         },
-        status: {
-            current: "OFF",
+        state: "OFF",
+        selectorSettings: {
+            mode: "rectangle",
+            strokeStyle: "#ff6666",
+            lineWidth: 2,
+            isActive: false,
+            startX: 0,
+            startY: 0,
+            path: [],
         },
     };
 
@@ -42,6 +50,7 @@ const ConfigManager = (() => {
             // Parse dot notation path to get nested config values
             return path.split(".").reduce((obj, key) => obj && obj[key], config);
         },
+
         getAll: () => config,
         update: (path, value) => {
             const keys = path.split(".");
@@ -55,6 +64,7 @@ const ConfigManager = (() => {
             }
             return value;
         },
+
         loadSavedSettings: () => {
             try {
                 const savedSettings = localStorage.getItem("vidscript_settings");
@@ -66,24 +76,26 @@ const ConfigManager = (() => {
                 console.error("Error loading saved settings:", e);
             }
         },
-        updateStatus: (newStatus) => {
-            // Validate the new status is valid
-            if (!statuses.includes(newStatus)) {
-                console.error(`Invalid status: ${newStatus}`);
+
+        updateState: (newState) => {
+            // Validate the new state is valid
+            if (!states.includes(newState)) {
+                console.error(`Invalid state: ${newState}`);
                 return false;
             }
 
-            const previousStatus = config.status.current;
-            config.status.current = newStatus;
+            config.state = newState;
 
-            // Emit status change event
+            // Emit state change event
             if (typeof EventManager !== "undefined") {
-                switch (newStatus) {
+                switch (newState) {
                     case "OFF":
                         EventManager.emit("remove-overlay");
+                        EventManager.emit("toggle-vidscript", false);
                         break;
                     case "READY":
                         EventManager.emit("add-overlay");
+                        EventManager.emit("toggle-vidscript", true);
                         break;
                     case "EXTRACTING":
                         EventManager.emit("start-extraction");
@@ -96,8 +108,60 @@ const ConfigManager = (() => {
 
             return true;
         },
-        getCurrentStatus: () => {
-            return config.status.current;
+
+        getCurrentState: () => {
+            return config.state;
+        },
+
+        updateSelectorSettings: (key = null, value) => {
+            switch (key) {
+                case "mode":
+                    if (!selectorStates.includes(value)) {
+                        console.error(`Invalid selector setting: ${value}`);
+                        return false;
+                    }
+                    config.selectorSettings.mode = value;
+                    break;
+                case "isActive":
+                    config.selectorSettings.isActive = value;
+                    break;
+                case "startX":
+                    config.selectorSettings.startX = value;
+                    break;
+                case "startY":
+                    config.selectorSettings.startY = value;
+                    break;
+                case "path":
+                    config.selectorSettings.path = value;
+                    break;
+                case "strokeStyle":
+                    config.selectorSettings.strokeStyle = value;
+                    break;
+                case "lineWidth":
+                    config.selectorSettings.lineWidth = value;
+                    break;
+                case null:
+                    config.selectorSettings = value;
+                    break;
+                default:
+                    config.selectorSettings[key] = value;
+                    break;
+            }
+
+            // Emit selector setting change event
+            if (typeof EventManager !== "undefined") {
+                EventManager.emit("update-selector-settings", config.selectorSettings);
+            }
+
+            return true;
+        },
+
+        getCurrentSelectorSettings: (key = null) => {
+            if (key) {
+                return config.selectorSettings[key];
+            }
+
+            return config.selectorSettings;
         },
     };
 })();

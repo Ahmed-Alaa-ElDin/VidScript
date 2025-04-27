@@ -58,7 +58,7 @@ const UIFactory = (() => {
         const wrapper = document.createElement("div");
         wrapper.id = buttonId;
         wrapper.title = title;
-        wrapper.className = ConfigManager.getCurrentStatus() === "READY" ? "checked" : "";
+        wrapper.className = ConfigManager.getCurrentState() === "READY" ? "checked" : "";
 
         // Create toggler wrapper
         const togglerWrapper = document.createElement("label");
@@ -83,7 +83,7 @@ const UIFactory = (() => {
         const toggle = document.createElement("input");
         toggle.id = "vidscript-toggle";
         toggle.type = "checkbox";
-        toggle.checked = ConfigManager.getCurrentStatus() === "READY" ? true : false;
+        toggle.checked = ConfigManager.getCurrentState() === "READY" ? true : false;
 
         const slider = document.createElement("span");
         slider.id = "vidscript-slider";
@@ -242,36 +242,36 @@ const UIFactory = (() => {
 
     // Create notification component
     const createNotification = (message, type = "info") => {
-        let statusElement = document.getElementById("vidscript-status");
+        let stateElement = document.getElementById("vidscript-state");
 
-        if (!statusElement) {
-            statusElement = document.createElement("div");
-            statusElement.id = "vidscript-status";
+        if (!stateElement) {
+            stateElement = document.createElement("div");
+            stateElement.id = "vidscript-state";
         }
 
         // Set notification style based on type
         switch (type) {
             case "success":
-                statusElement.style.backgroundColor = "#4caf50";
-                statusElement.style.color = "white";
+                stateElement.style.backgroundColor = "#4caf50";
+                stateElement.style.color = "white";
                 break;
             case "error":
-                statusElement.style.backgroundColor = "#f44336";
-                statusElement.style.color = "white";
+                stateElement.style.backgroundColor = "#f44336";
+                stateElement.style.color = "white";
                 break;
             default:
-                statusElement.style.backgroundColor = "#2196f3";
-                statusElement.style.color = "white";
+                stateElement.style.backgroundColor = "#2196f3";
+                stateElement.style.color = "white";
         }
 
-        statusElement.textContent = message;
-        statusElement.style.opacity = "1";
+        stateElement.textContent = message;
+        stateElement.style.opacity = "1";
 
-        if (!statusElement.parentNode) {
-            document.body.appendChild(statusElement);
+        if (!stateElement.parentNode) {
+            document.body.appendChild(stateElement);
         }
 
-        return statusElement;
+        return stateElement;
     };
 
     // Create the video overlay
@@ -311,14 +311,139 @@ const UIFactory = (() => {
         borderOverlay.style.width = `${frameData.width}px`;
         borderOverlay.style.height = `${frameData.height}px`;
 
+        // Selection mode toggler
+        const selectionToggleContainer = createSelectorToggle();
+
+        // Selection canvas
+        const selectionCanvas = createSelectionCanvas(frameData);
+
         // Add to DOM
         overlay.appendChild(inner);
         overlay.appendChild(sparkle);
+        overlay.appendChild(selectionToggleContainer);
+        overlay.appendChild(selectionCanvas);
         videoContainer.appendChild(overlay);
         videoContainer.appendChild(borderOverlay);
 
+        // Initialize the tools on that canvas:
+        setupSelectionTools(selectionCanvas, frameData);
+
+        // Add click event to overlay
+        overlay.addEventListener("click", (e) => {
+            e.stopPropagation();
+        });
+
         console.log("✅ Overlay is gradually revealed with magic effect");
         return true;
+    };
+
+    // Resize the video overlay
+    // Resize the video overlay
+    const resizeVideoOverlay = (frameData) => {
+        // Find the existing overlay
+        const overlay = document.querySelector("#vidscript-overlay");
+
+        // If no overlay exists, create one
+        if (!overlay) {
+            return createVideoOverlay(frameData);
+        }
+
+        // Get old dimensions before updating
+        const oldWidth = parseFloat(overlay.style.width) || frameData.width;
+        const oldHeight = parseFloat(overlay.style.height) || frameData.height;
+
+        // Calculate scale factors
+        const scaleX = frameData.width / oldWidth;
+        const scaleY = frameData.height / oldHeight;
+
+        // Update overlay dimensions and position
+        overlay.style.width = `${frameData.width}px`;
+        overlay.style.height = `${frameData.height}px`;
+        overlay.style.left = `${frameData.left}px`;
+        overlay.style.top = `${frameData.top}px`;
+
+        // Update overlay inner background
+        const inner = document.querySelector("#vidscript-overlay-inner");
+        if (inner) {
+            inner.style.background = `url(${frameData.dataUrl}) no-repeat center center`;
+            inner.style.backgroundSize = "100% 100%";
+        }
+
+        // Update border overlay if it exists
+        const borderOverlay = document.querySelector("#vidscript-border");
+        if (borderOverlay) {
+            borderOverlay.style.width = `${frameData.width}px`;
+            borderOverlay.style.height = `${frameData.height}px`;
+            borderOverlay.style.left = `${frameData.left}px`;
+            borderOverlay.style.top = `${frameData.top}px`;
+        }
+
+        // Update selection canvas
+        const selectionCanvas = document.querySelector("#vidscript-selection-canvas");
+
+        if (selectionCanvas) {
+            selectionCanvas.width = frameData.width;
+            selectionCanvas.height = frameData.height;
+            selectionCanvas.style.width = `${frameData.width}px`;
+            selectionCanvas.style.height = `${frameData.height}px`;
+
+            // Get current selection data
+            const currentSelectorSettings = ConfigManager.getCurrentSelectorSettings();
+
+            // If there's an active selection, scale it to the new dimensions
+            if (currentSelectorSettings.path && currentSelectorSettings.path.length) {
+                // Scale the existing path
+                const scaledPath = currentSelectorSettings.path.map((point) => ({
+                    x: point.x * scaleX,
+                    y: point.y * scaleY,
+                }));
+
+                // Update start coordinates
+                const startX = currentSelectorSettings.startX * scaleX;
+                const startY = currentSelectorSettings.startY * scaleY;
+
+                // Update the selector settings
+                ConfigManager.updateSelectorSettings("startX", startX);
+                ConfigManager.updateSelectorSettings("startY", startY);
+                ConfigManager.updateSelectorSettings("path", scaledPath);
+
+                // Redraw the path on the canvas
+                const ctx = selectionCanvas.getContext("2d");
+                ctx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
+                ctx.strokeStyle = currentSelectorSettings.strokeStyle;
+                ctx.lineWidth = currentSelectorSettings.lineWidth;
+
+                if (currentSelectorSettings.mode === "rectangle" && scaledPath.length >= 2) {
+                    // Redraw rectangle
+                    const width = scaledPath[1].x - startX;
+                    const height = scaledPath[1].y - startY;
+                    ctx.strokeRect(startX, startY, width, height);
+                } else if (currentSelectorSettings.mode === "freehand" && scaledPath.length >= 2) {
+                    // Redraw freehand path
+                    ctx.beginPath();
+                    ctx.moveTo(scaledPath[0].x, scaledPath[0].y);
+
+                    for (let i = 1; i < scaledPath.length; i++) {
+                        ctx.lineTo(scaledPath[i].x, scaledPath[i].y);
+                    }
+
+                    ctx.stroke();
+                }
+            }
+        }
+
+        console.log(
+            "🔄 Video overlay resized to",
+            frameData.width,
+            "x",
+            frameData.height,
+            "with scale factors:",
+            scaleX.toFixed(2),
+            "x",
+            scaleY.toFixed(2)
+        );
+
+        return overlay;
     };
 
     // Remove overlay
@@ -335,12 +460,420 @@ const UIFactory = (() => {
         return true;
     };
 
+    const createSelectorToggle = () => {
+        // Create the wrapper
+        const selectionToolsWrapper = document.createElement("div");
+        selectionToolsWrapper.id = "vidscript-selection-tools-wrapper";
+
+        // Create a toggle switch container
+        const toggleContainer = document.createElement("div");
+        toggleContainer.id = "vidscript-selector-toggle";
+
+        // Create the switch (tiny button)
+        const switchButton = document.createElement("div");
+        switchButton.id = "vidscript-selector-toggle-button";
+
+        // The tiny circle that moves
+        const switchCircle = document.createElement("div");
+        switchCircle.id = "vidscript-selector-toggle-circle";
+
+        // Text label
+        const switchLabel = document.createElement("span");
+        switchLabel.id = "vidscript-selector-toggle-label";
+        switchLabel.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3a2 2 0 0 0-2 2m16-2a2 2 0 0 1 2 2m0 14a2 2 0 0 1-2 2M5 21a2 2 0 0 1-2-2M9 3h1M9 21h1m4-18h1m-1 18h1M3 9v1m18-1v1M3 14v1m18-1v1"/></svg>';
+
+        // Full screen selector
+        const fullScreenSelector = document.createElement("button");
+        fullScreenSelector.id = "vidscript-full-screen-selector";
+        fullScreenSelector.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15"><path fill="none" stroke="currentColor" d="M2 14.5h11m-5.5-4v4m-7-13v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-12a1 1 0 0 0-1 1Z" stroke-width="1"/></svg>';
+
+        // Add text label
+        const fullScreenLabel = document.createElement("span");
+        fullScreenLabel.id = "vidscript-label";
+        fullScreenLabel.innerText = "Selection Tools";
+
+        // Assemble the toggle
+        selectionToolsWrapper.appendChild(fullScreenLabel);
+        selectionToolsWrapper.appendChild(fullScreenSelector);
+        selectionToolsWrapper.appendChild(toggleContainer);
+        switchButton.appendChild(switchCircle);
+        toggleContainer.appendChild(switchButton);
+        toggleContainer.appendChild(switchLabel);
+
+        // Logic for switching
+        let currentMode = ConfigManager.getCurrentSelectorSettings();
+
+        toggleContainer.addEventListener("click", (e) => {
+            e.stopPropagation();
+            currentMode = currentMode === "rectangle" ? "freehand" : "rectangle";
+            ConfigManager.updateSelectorSettings("mode", currentMode);
+            switchCircle.style.left = currentMode === "rectangle" ? "1px" : "15px";
+            switchLabel.innerHTML =
+                currentMode === "rectangle"
+                    ? '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3a2 2 0 0 0-2 2m16-2a2 2 0 0 1 2 2m0 14a2 2 0 0 1-2 2M5 21a2 2 0 0 1-2-2M9 3h1M9 21h1m4-18h1m-1 18h1M3 9v1m18-1v1M3 14v1m18-1v1"/></svg>'
+                    : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="currentColor" d="M8.162 2.212a8 8 0 0 1 3.676 0a.75.75 0 0 1-.344 1.46a6.5 6.5 0 0 0-2.988 0a.75.75 0 0 1-.344-1.46M6.825 3.437a.75.75 0 0 1-.242 1.033A6.54 6.54 0 0 0 4.47 6.583a.75.75 0 0 1-1.275-.79a8.04 8.04 0 0 1 2.598-2.598a.75.75 0 0 1 1.032.242m6.35 0a.75.75 0 0 1 1.032-.242a8.04 8.04 0 0 1 2.598 2.598a.75.75 0 0 1-1.275.79a6.54 6.54 0 0 0-2.112-2.113a.75.75 0 0 1-.243-1.033M3.114 7.604a.75.75 0 0 1 .558.902a6.5 6.5 0 0 0 0 2.988a.75.75 0 0 1-1.46.344a8 8 0 0 1 0-3.676a.75.75 0 0 1 .902-.558m13.772 0a.75.75 0 0 1 .902.558a8 8 0 0 1 0 3.676a.75.75 0 0 1-1.46-.344a6.5 6.5 0 0 0 0-2.988a.75.75 0 0 1 .558-.902m-13.449 5.57a.75.75 0 0 1 1.033.244a6.54 6.54 0 0 0 2.113 2.112a.75.75 0 1 1-.79 1.275a8.04 8.04 0 0 1-2.598-2.598a.75.75 0 0 1 .242-1.032m13.673 1.262a.75.75 0 0 0-1.22-.872l-.003.004l-.017.022l-.074.097a10.3 10.3 0 0 1-1.33 1.376c-1.018-.73-2.34-1.313-3.966-1.313c-.752 0-1.388.244-1.84.677A2.17 2.17 0 0 0 7.987 16c0 .571.224 1.144.671 1.573c.453.433 1.088.677 1.841.677c1.532 0 2.868-.584 3.915-1.274l.055.054a8.4 8.4 0 0 1 1.285 1.67l.06.108l.012.024l.002.003c-.152-.266 0 .002 0 .002a.75.75 0 0 0 1.342-.672l-.001-.002v-.001l-.003-.005l-.007-.012l-.022-.043l-.08-.146a10 10 0 0 0-1.445-1.903a12 12 0 0 0 1.362-1.44q.063-.078.097-.125l.026-.036l.008-.01l.003-.004zm-6.61.814c1.027 0 1.91.304 2.65.743c-.784.443-1.683.757-2.65.757c-.422 0-.668-.131-.803-.26a.67.67 0 0 1-.21-.49c0-.179.07-.356.21-.49c.135-.129.38-.26.803-.26"/></svg>';
+            console.log(`🖱️ Switched to: ${currentMode} mode`);
+        });
+
+        fullScreenSelector.addEventListener("click", (e) => {
+            e.stopPropagation();
+        });
+
+        return selectionToolsWrapper;
+    };
+
+    const createSelectionCanvas = (frameData) => {
+        const selectionCanvas = document.createElement("canvas");
+        selectionCanvas.id = "vidscript-selection-canvas";
+        selectionCanvas.width = frameData.width;
+        selectionCanvas.height = frameData.height;
+
+        // Apply styling using Object.assign for clean property assignment
+        Object.assign(selectionCanvas.style, {
+            position: "absolute",
+            top: "0",
+            left: "0",
+            width: `${frameData.width}px`,
+            height: `${frameData.height}px`,
+            cursor: "crosshair",
+            zIndex: 10001,
+            pointerEvents: "auto",
+        });
+
+        return selectionCanvas;
+    };
+
+    const setupSelectionTools = (canvas, frameData) => {
+        // Drawing context and state variables
+        const ctx = canvas.getContext("2d");
+        const drawingState = ConfigManager.getCurrentSelectorSettings();
+
+        // Drawing styles
+        const drawStyles = {
+            strokeStyle: drawingState.strokeStyle,
+            lineWidth: drawingState.lineWidth,
+        };
+
+        // Initialize mode listener
+        initModeToggleListener(ctx);
+
+        // Set up event listeners with capture phase
+        setupSelectionEventListeners(canvas, ctx, frameData);
+    };
+
+    // Initialize mode toggle listener
+    const initModeToggleListener = (ctx) => {
+        const toggleElement = document.getElementById("vidscript-selector-toggle");
+        if (!toggleElement) return;
+
+        toggleElement.addEventListener("click", () => {
+            // Clear any in-progress drawing
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        });
+    };
+
+    // Set up all event listeners
+    const setupSelectionEventListeners = (canvas, ctx, frameData) => {
+        // Mouse down - start drawing
+        canvas.addEventListener(
+            "mousedown",
+            (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                startDrawing(e, canvas);
+            },
+            true
+        );
+
+        // Mouse move - update drawing
+        canvas.addEventListener(
+            "mousemove",
+            (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (!ConfigManager.getCurrentSelectorSettings().isActive) return;
+
+                updateDrawing(e, canvas, ctx);
+            },
+            true
+        );
+
+        // Mouse up - finish drawing and process
+        canvas.addEventListener(
+            "mouseup",
+            (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (!ConfigManager.getCurrentSelectorSettings().isActive) return;
+
+                finishDrawing(ctx, ConfigManager.getCurrentSelectorSettings(), frameData);
+            },
+            true
+        );
+    };
+
+    // Try to pause video to prevent play/pause toggling
+    const pauseVideoIfPlaying = () => {
+        // Try multiple approaches to ensure video pauses
+        try {
+            // Method 1: Direct video element
+            const videoElement = document.querySelector("video");
+            if (videoElement && !videoElement.paused) {
+                videoElement.pause();
+            }
+        } catch (err) {
+            console.warn("Could not pause video:", err);
+        }
+    };
+
+    // Handle starting a drawing operation
+    const startDrawing = (e, canvas) => {
+        ConfigManager.updateSelectorSettings("isActive", true);
+
+        const rect = canvas.getBoundingClientRect();
+        ConfigManager.updateSelectorSettings("startX", e.clientX - rect.left);
+        ConfigManager.updateSelectorSettings("startY", e.clientY - rect.top);
+
+        // Initialize path for freehand drawing
+        if (ConfigManager.getCurrentSelectorSettings().mode === "freehand") {
+            ConfigManager.updateSelectorSettings("path", [
+                {
+                    x: ConfigManager.getCurrentSelectorSettings().startX,
+                    y: ConfigManager.getCurrentSelectorSettings().startY,
+                },
+            ]);
+        } else {
+            ConfigManager.updateSelectorSettings("path", []);
+        }
+    };
+
+    // Handle drawing updates during mouse movement
+    const updateDrawing = (e, canvas, ctx) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Clear previous drawing
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Apply drawing styles
+        ctx.strokeStyle = ConfigManager.getCurrentSelectorSettings().strokeStyle;
+        ctx.lineWidth = ConfigManager.getCurrentSelectorSettings().lineWidth;
+
+        if (ConfigManager.getCurrentSelectorSettings().mode === "rectangle") {
+            // Draw rectangle
+            const width = x - ConfigManager.getCurrentSelectorSettings().startX;
+            const height = y - ConfigManager.getCurrentSelectorSettings().startY;
+            ctx.strokeRect(
+                ConfigManager.getCurrentSelectorSettings().startX,
+                ConfigManager.getCurrentSelectorSettings().startY,
+                width,
+                height
+            );
+
+            // Store current position in path (this is what was missing)
+            ConfigManager.updateSelectorSettings("path", [
+                {
+                    x: ConfigManager.getCurrentSelectorSettings().startX,
+                    y: ConfigManager.getCurrentSelectorSettings().startY,
+                },
+                { x, y },
+            ]);
+        } else {
+            // Draw freehand path
+            ConfigManager.updateSelectorSettings("path", [
+                ...ConfigManager.getCurrentSelectorSettings().path,
+                { x, y },
+            ]);
+            drawFreehandPath(ctx, ConfigManager.getCurrentSelectorSettings().path);
+        }
+    };
+
+    const drawFreehandPath = (ctx, path) => {
+        if (path.length < 2) return;
+
+        ctx.beginPath();
+        ctx.moveTo(path[0].x, path[0].y);
+
+        for (let i = 1; i < path.length; i++) {
+            ctx.lineTo(path[i].x, path[i].y);
+        }
+
+        ctx.stroke();
+    };
+
+    // Handle finishing a drawing operation
+    const finishDrawing = (ctx, drawingState, frameData) => {
+        ConfigManager.updateSelectorSettings("isActive", false);
+
+        // Clear the canvas
+        // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+        // Process the selected region
+        processSelectedRegion(frameData);
+    };
+
+    // Process the selected region for OCR
+    const processSelectedRegion = (frameData) => {
+        const image = new Image();
+        image.src = frameData.dataUrl;
+
+        image.onload = () => {
+            const cropData = extractImageRegion(image);
+            if (!cropData) return;
+
+            // Download image
+            // downloadImage(cropData.dataUrl);
+
+            // Send to OCR service
+            // sendToOCR(cropData.dataUrl);
+        };
+    };
+
+    const downloadImage = (dataUrl) => {
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = "selected_region.png";
+        link.click();
+    };
+
+    // Extract the selected region from the image
+    const extractImageRegion = (image) => {
+        const cropCanvas = document.createElement("canvas");
+        const cropCtx = cropCanvas.getContext("2d");
+
+        if (ConfigManager.getCurrentSelectorSettings().mode === "rectangle") {
+            return extractRectangleRegion(image, cropCanvas, cropCtx);
+        } else {
+            return extractFreehandRegion(image, cropCanvas, cropCtx);
+        }
+    };
+
+    // Extract rectangle region
+    const extractRectangleRegion = (image, cropCanvas, cropCtx) => {
+        const width =
+            Math.abs(
+                ConfigManager.getCurrentSelectorSettings().path[1]?.x -
+                    ConfigManager.getCurrentSelectorSettings().startX
+            ) ||
+            Math.abs(
+                ConfigManager.getCurrentSelectorSettings().startX -
+                    (ConfigManager.getCurrentSelectorSettings().path[1]?.x ||
+                        ConfigManager.getCurrentSelectorSettings().startX)
+            );
+
+        const height =
+            Math.abs(
+                ConfigManager.getCurrentSelectorSettings().path[1]?.y -
+                    ConfigManager.getCurrentSelectorSettings().startY
+            ) ||
+            Math.abs(
+                ConfigManager.getCurrentSelectorSettings().startY -
+                    (ConfigManager.getCurrentSelectorSettings().path[1]?.y ||
+                        ConfigManager.getCurrentSelectorSettings().startY)
+            );
+
+        // Skip if selection is too small
+        if (width < 5 || height < 5) return null;
+
+        cropCanvas.width = width;
+        cropCanvas.height = height;
+
+        cropCtx.drawImage(
+            image,
+            ConfigManager.getCurrentSelectorSettings().startX,
+            ConfigManager.getCurrentSelectorSettings().startY,
+            width,
+            height,
+            0,
+            0,
+            width,
+            height
+        );
+
+        return {
+            dataUrl: cropCanvas.toDataURL("image/png"),
+        };
+    };
+
+    // Extract freehand region
+    const extractFreehandRegion = (image, cropCanvas, cropCtx) => {
+        const path = ConfigManager.getCurrentSelectorSettings().path;
+
+        // Calculate bounding box of path
+        const minX = Math.min(...path.map((p) => p.x));
+        const maxX = Math.max(...path.map((p) => p.x));
+        const minY = Math.min(...path.map((p) => p.y));
+        const maxY = Math.max(...path.map((p) => p.y));
+
+        const width = maxX - minX;
+        const height = maxY - minY;
+
+        // Skip if selection is too small
+        if (width < 5 || height < 5) return null;
+
+        cropCanvas.width = width;
+        cropCanvas.height = height;
+
+        // Clip to path
+        cropCtx.save();
+        cropCtx.beginPath();
+        cropCtx.translate(-minX, -minY);
+        cropCtx.moveTo(path[0].x, path[0].y);
+
+        path.forEach((p) => cropCtx.lineTo(p.x, p.y));
+
+        cropCtx.closePath();
+        cropCtx.clip();
+
+        // Draw the image shifted
+        cropCtx.drawImage(image, 0, 0);
+        cropCtx.restore();
+
+        return {
+            dataUrl: cropCanvas.toDataURL("image/png"),
+        };
+    };
+
+    // Send image to OCR service
+    const sendToOCR = (dataUrl) => {
+        chrome.runtime.sendMessage(
+            {
+                type: "ocr-request",
+                image: dataUrl,
+            },
+            (response) => {
+                if (response && response.success) {
+                    displayOCRResult(response.text);
+                } else {
+                    displayOCRResult("OCR processing failed. Please try again.");
+                }
+            }
+        );
+    };
+
+    // Display OCR result
+    const displayOCRResult = (text) => {
+        if (text && text.trim().length > 0) {
+            // You could replace this with a modal instead of an alert
+            alert("OCR text:\n\n" + text);
+        } else {
+            alert("No text detected in the selected area.");
+        }
+    };
+
     return {
         createMainButton,
         createSettingsMenu,
         createModal,
         createNotification,
         createVideoOverlay,
+        resizeVideoOverlay,
         removeVideoOverlay,
     };
 })();

@@ -67,16 +67,14 @@ const DOMManager = (() => {
                 return;
             }
 
-            // get the current status
-            const currentStatus = ConfigManager.getCurrentStatus();
+            // get the current state
+            const currentState = ConfigManager.getCurrentState();
 
-            // if the current status is OFF, trigger creating video overlay
-            if (currentStatus == "OFF") {
-                button.classList.add("checked");
-                ConfigManager.updateStatus("READY");
+            // if the current state is OFF, trigger creating video overlay
+            if (currentState == "OFF") {
+                ConfigManager.updateState("READY");
             } else {
-                button.classList.remove("checked");
-                ConfigManager.updateStatus("OFF");
+                ConfigManager.updateState("OFF");
             }
         });
     };
@@ -250,8 +248,8 @@ const DOMManager = (() => {
                     lastVideoSize = { width: newWidth, height: newHeight };
 
                     // Dispatch custom event for other components to listen to
-                    if (ConfigManager.getCurrentStatus() === "READY") {
-                        EventManager.emit("add-overlay");
+                    if (ConfigManager.getCurrentState() === "READY") {
+                        EventManager.emit("resize-overlay");
                     }
 
                     console.log(`📏 Video resized: ${newWidth}x${newHeight}`);
@@ -269,7 +267,7 @@ const DOMManager = (() => {
     // Update UI elements based on video size
     const updateUIOnResize = (videoSize) => {
         // Notify EventManager about the resize
-        EventManager.emit("videoResize", videoSize);
+        EventManager.emit("video-resized", videoSize);
 
         // Get current active overlays or UI elements
         const overlays = document.querySelectorAll(".vidscript-overlay");
