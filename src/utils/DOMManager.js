@@ -321,6 +321,64 @@ const DOMManager = (() => {
         document.removeEventListener("click", closeMenuOnClickOutside);
     };
 
+    // Insert Results Slider
+    const insertResultsSlider = () => {
+        const overlay = createResultsSliderOverlay();
+        const slider = createResultsSlider();
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(slider);
+    };
+
+    // Create Result Slider Overlay
+    const createResultsSliderOverlay = () => {
+        const overlay = document.createElement("div");
+        overlay.id = "vidscript-results-overlay";
+
+        overlay.addEventListener("click", () => {
+            EventManager.emit("hide-results");
+        });
+
+        return overlay;
+    };
+
+    // Create Results Slider
+    const createResultsSlider = () => {
+        const sliderPanel = document.createElement("div");
+        sliderPanel.id = "vidscript-slider";
+
+        const sliderHeader = document.createElement("div");
+        sliderHeader.id = "vidscript-slider-header";
+        sliderPanel.appendChild(sliderHeader);
+
+        const sliderHeaderTitle = document.createElement("h3");
+        sliderHeaderTitle.id = "vidscript-slider-header-title";
+        sliderHeaderTitle.textContent = "VidScript Results";
+        sliderHeader.appendChild(sliderHeaderTitle);
+
+        const sliderHeaderActions = document.createElement("div");
+        sliderHeaderActions.id = "vidscript-slider-header-actions";
+        sliderHeader.appendChild(sliderHeaderActions);
+
+        const closeSliderBtn = document.createElement("button");
+        closeSliderBtn.id = "vidscript-close-slider-btn";
+        closeSliderBtn.ariaLabel = "Close slider";
+        closeSliderBtn.innerHTML = "<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path fill='currentColor' d='M16.95 8.464a1 1 0 0 0-1.414-1.414L12 10.586L8.464 7.05A1 1 0 1 0 7.05 8.464L10.586 12L7.05 15.536a1 1 0 1 0 1.414 1.414L12 13.414l3.536 3.536a1 1 0 1 0 1.414-1.414L13.414 12z'/></svg>";
+        sliderHeaderActions.appendChild(closeSliderBtn);
+
+        closeSliderBtn.addEventListener("click", () => {
+            EventManager.emit("hide-results");
+        });
+
+        const sliderContent = document.createElement("div");
+        sliderContent.id = "vidscript-slider-content";
+        sliderPanel.appendChild(sliderContent);
+
+        return sliderPanel;
+    };
+
+
+
     return {
         insertButton,
         setupButtonObserver,
@@ -330,6 +388,8 @@ const DOMManager = (() => {
         updateUIOnResize,
         getVideoSize,
         cleanup,
+        createResultsSlider,
+        insertResultsSlider,
     };
 })();
 

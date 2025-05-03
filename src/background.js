@@ -1,5 +1,5 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === "ocr-request" && message.image) {
+    if (message.type === "ocr-space-request" && message.image) {
         const apiKey = "K84343132688957";
 
         const formData = new FormData();

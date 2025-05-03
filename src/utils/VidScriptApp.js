@@ -37,6 +37,9 @@ const VidScriptApp = (() => {
             // Set up event handlers
             setupEventHandlers();
 
+            // Insert results slider
+            DOMManager.insertResultsSlider();
+
             console.log("✅ VidScript initialized successfully");
         } catch (error) {
             console.error("❌ VidScript initialization error:", error);
@@ -119,35 +122,64 @@ const VidScriptApp = (() => {
             } else {
                 toggler.classList.remove("checked");
                 button.classList.remove("checked");
+                ConfigManager.resetSettings();
             }
         });
 
-        // // Extract text button click
-        // EventManager.on("extract-text", async () => {
-        //     try {
-        //         // Pause video
-        //         VideoManager.pauseVideo();
+        // Extract text button click
+        EventManager.on("extract-text", async () => {
+            try {
+                let frameData = ConfigManager.getExtractionImage();
+                if (!frameData) {
+                    NotificationManager.show("Please select an area to extract text from", "error");
+                    return;
+                }
 
-        //         // Capture current frame
-        //         const frameData = await VideoManager.captureCurrentFrame();
+                // Process the frame to extract text
+                NotificationManager.show("Extracting text from video...", "info");
+                const result = await TextExtractor.processFrame(frameData);
 
-        //         // Process the frame to extract text
-        //         NotificationManager.show("Extracting text from video...", "info");
-        //         const result = await TextExtractor.processFrame(frameData);
+                if (result.success) {
+                    ConfigManager.updateState("DONE");
 
-        //         if (result.success) {
-        //             NotificationManager.show("Text extracted successfully!", "success");
+                    NotificationManager.show("Text extracted successfully!", "success");
 
-        //             // Show extracted text in modal
-        //             UIFactory.createModal("Extracted Text", result.text);
-        //         } else {
-        //             NotificationManager.show(`Text extraction failed: ${result.error}`, "error");
-        //         }
-        //     } catch (error) {
-        //         console.error("Extract text error:", error);
-        //         NotificationManager.show(`Error: ${error.message}`, "error");
-        //     }
-        // });
+                    // Show extracted text in modal
+                    // UIFactory.createModal("Extracted Text", result.text);
+                } else {
+                    NotificationManager.show(`Text extraction failed: ${result.error}`, "error");
+                }
+            } catch (error) {
+                console.error("Extract text error:", error);
+                NotificationManager.show(`Error: ${error.message}`, "error");
+            }
+        });
+
+        EventManager.on("show-results", () => {
+            const vidScriptOverlay = document.querySelector("#vidscript-results-overlay");
+            const vidScriptSlider = document.querySelector("#vidscript-slider");
+
+            if (!vidScriptOverlay || !vidScriptSlider) {
+                return;
+            }
+
+            document.body.style.overflow = "hidden";
+            vidScriptOverlay.classList.add("active");
+            vidScriptSlider.classList.add("active");
+        });
+
+        EventManager.on("hide-results", () => {
+            const vidScriptOverlay = document.querySelector("#vidscript-results-overlay");
+            const vidScriptSlider = document.querySelector("#vidscript-slider");
+
+            if (!vidScriptOverlay || !vidScriptSlider) {
+                return;
+            }
+
+            document.body.style.overflow = "auto";
+            vidScriptOverlay.classList.remove("active");
+            vidScriptSlider.classList.remove("active");
+        });
 
         // // Video paused event
         // EventManager.on("video-paused", () => {

@@ -23,6 +23,7 @@ const ConfigManager = (() => {
                 "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--enable-backdrop-filter-experiment",
             ariaLabel: "Extract Text",
         },
+
         // Default settings that can be overridden by user
         settings: {
             showBoundingBoxes: false,
@@ -33,7 +34,20 @@ const ConfigManager = (() => {
             textColor: "rgba(255, 255, 255, 0.9)",
             overlayBackground: "rgba(0, 0, 0, 0.6)",
         },
+
+        // Current state of the application
         state: "OFF",
+
+        // Current extraction image data
+        extractionImage: {
+            dataUrl: null,
+            currentTime: null,
+            timestamp: null,
+            text: null,
+            textOverlay: null,
+        },
+
+        // Current selector settings
         selectorSettings: {
             mode: "rectangle",
             strokeStyle: "#ff6666",
@@ -52,6 +66,7 @@ const ConfigManager = (() => {
         },
 
         getAll: () => config,
+
         update: (path, value) => {
             const keys = path.split(".");
             const lastKey = keys.pop();
@@ -63,6 +78,14 @@ const ConfigManager = (() => {
                 localStorage.setItem("vidscript_settings", JSON.stringify(config.settings));
             }
             return value;
+        },
+
+        getExtractionImage: () => {
+            return config.extractionImage;
+        },
+
+        updateExtractionImage: (image) => {
+            config.extractionImage = { ...config.extractionImage, ...image };
         },
 
         loadSavedSettings: () => {
@@ -96,12 +119,13 @@ const ConfigManager = (() => {
                     case "READY":
                         EventManager.emit("add-overlay");
                         EventManager.emit("toggle-vidscript", true);
+                        EventManager.emit("hide-results");
                         break;
                     case "EXTRACTING":
-                        EventManager.emit("start-extraction");
+                        EventManager.emit("extract-text");
                         break;
                     case "DONE":
-                        EventManager.emit("end-extraction");
+                        EventManager.emit("show-results");
                         break;
                 }
             }
@@ -111,6 +135,10 @@ const ConfigManager = (() => {
 
         getCurrentState: () => {
             return config.state;
+        },
+
+        getCurrentSelectorMode: () => {
+            return config.selectorSettings.mode;
         },
 
         updateSelectorSettings: (key = null, value) => {
@@ -162,6 +190,28 @@ const ConfigManager = (() => {
             }
 
             return config.selectorSettings;
+        },
+
+        resetSettings: () => {
+            config.settings = {
+                showBoundingBoxes: false,
+                language: "auto",
+                fontFamily: "Arial",
+                fontSize: 20,
+                boxColor: "rgba(255, 0, 0, 0.5)",
+                textColor: "rgba(255, 255, 255, 0.9)",
+                overlayBackground: "rgba(0, 0, 0, 0.6)",
+            };
+
+            config.selectorSettings = {
+                mode: "rectangle",
+                strokeStyle: "#ff6666",
+                lineWidth: 2,
+                isActive: false,
+                startX: 0,
+                startY: 0,
+                path: [],
+            };
         },
     };
 })();
