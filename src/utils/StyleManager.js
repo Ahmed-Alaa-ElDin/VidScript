@@ -468,6 +468,11 @@ const StyleManager = (() => {
                 overflow: hidden;
             }
 
+            #vidscript-slider.dark {
+                background-color: #111827;
+                box-shadow: 0 10px 25px rgba(255, 255, 255, 0.15);
+            }
+
             #vidscript-slider.active {
                 transform: translateX(-50%) translateY(0);
             }
