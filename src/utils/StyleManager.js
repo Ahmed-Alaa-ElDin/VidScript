@@ -453,7 +453,8 @@ const StyleManager = (() => {
                 position: fixed;
                 left: 50%;
                 bottom: 0;
-                transform: translateX(-50%) translateY(100%);
+                transform: translateX(-50%) translateY(0);
+                /* transform: translateX(-50%) translateY(100%); */
                 width: 95vw;
                 height: 90vh;
                 background-color: white;
@@ -512,12 +513,80 @@ const StyleManager = (() => {
             }
 
             #vidscript-close-slider-btn:hover {
-                background-color: #ff6f6f;
+                background-color: #ff2f2f;
             }
 
             #vidscript-slider-content {
                 padding: 1.5rem;
                 padding-top: 3rem;
+            }
+
+            #vidscript-slider-content-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 50px;
+            }
+
+            .controller-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                cursor: pointer;
+                border-radius: 9999px;
+                background-color: #ff4f4f;
+                border: none;
+                width: min-content;
+                padding: 5px 12px 5px 5px;
+            }
+
+            .controller-btn:hover {
+                background-color: #ff2f2f;
+            }
+
+            .controller-btn .icon-circle {
+                width: 18px;
+                height: 18px;
+                background: #fff;
+                border-radius: 50%;
+                position: relative;
+                cursor: pointer;
+                transition: background 0.3s ease;
+                color: black;
+                padding: 7px;
+            }
+
+            .controller-btn .icon-circle svg {
+                width: 100%;
+                height: 100%;
+            }
+
+            .controller-btn .btn-text {
+                color: white;
+                font-weight: bold;
+                font-size: 14px;
+            }
+
+            #vidscript-slider-content-left-actions,
+            #vidscript-slider-content-right-actions {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 15px;
+            }
+
+            #vidscript-slider-content-left-controllers,
+            #vidscript-slider-content-right-controllers {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 15px;
+            }
+
+            #vidscript-slider-content-right-controllers-title {
+                font-size: 20px;
+                font-weight: bold;
+                color: #574a4a;
             }
 
             @keyframes revealBorder {
@@ -530,8 +599,7 @@ const StyleManager = (() => {
                     -webkit-mask-image: linear-gradient(to top, black 100%, transparent 100%);
                 }
             }
-            
-            
+
             @keyframes revealMask {
                 0% {
                     mask-image: linear-gradient(to top, black 0%, black 0%, transparent 0%);
@@ -542,7 +610,7 @@ const StyleManager = (() => {
                     -webkit-mask-image: linear-gradient(to top, black 100%, black 100%, transparent 100%);
                 }
             }
-    
+
             @keyframes sparkleMove {
                 0%   { top: 100%; opacity: 1; }
                 90%  { opacity: 1; }
