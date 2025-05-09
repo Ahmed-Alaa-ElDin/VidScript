@@ -99,16 +99,22 @@ const VideoManager = (() => {
                 const ctx = canvas.getContext("2d");
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                // Return both canvas and dataURL
-                resolve({
+                ConfigManager.updateFrameData({
+                    mode: "image",
                     canvas,
                     dataUrl: canvas.toDataURL("image/png"),
                     width: parseInt(video.style.width) || video.videoWidth,
                     height: parseInt(video.style.height) || video.videoHeight,
                     top: parseInt(video.style.top) || video.offsetTop,
                     left: parseInt(video.style.left) || video.offsetLeft,
-                    timestamp: getCurrentTime(),
+                    currentTime: getCurrentTime(),
+                    timestamp: Date.now(),
+                    text: null,
+                    textOverlay: null,
                 });
+
+                // Return both canvas and dataURL
+                resolve(ConfigManager.getFrameData());
             } catch (error) {
                 reject(error);
             }

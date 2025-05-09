@@ -71,11 +71,7 @@ const DOMManager = (() => {
             const currentState = ConfigManager.getCurrentState();
 
             // if the current state is OFF, trigger creating video overlay
-            if (currentState == "OFF") {
-                ConfigManager.updateState("READY");
-            } else {
-                ConfigManager.updateState("OFF");
-            }
+            ConfigManager.updateState(currentState == "OFF" ? "READY" : "OFF");
         });
     };
 
@@ -248,11 +244,12 @@ const DOMManager = (() => {
                     lastVideoSize = { width: newWidth, height: newHeight };
 
                     // Dispatch custom event for other components to listen to
-                    if (ConfigManager.getCurrentState() === "READY") {
+                    if (ConfigManager.getCurrentState() !== "OFF") {
                         EventManager.emit("resize-overlay");
                     }
 
                     console.log(`📏 Video resized: ${newWidth}x${newHeight}`);
+                    console.log(`📏 Video resized: ${ConfigManager.getCurrentState()}`);
                 }
             }
         });
@@ -407,6 +404,9 @@ const DOMManager = (() => {
         const sliderContentLeftControllers = createSliderContentLeftControllers();
         sliderContentLeft.appendChild(sliderContentLeftControllers);
 
+        const sliderContentLeftResults = createSliderContentLeftResults();
+        sliderContentLeft.appendChild(sliderContentLeftResults);
+
         return sliderContentLeft;
     };
 
@@ -433,6 +433,7 @@ const DOMManager = (() => {
 
         const textArea = document.createElement("textarea");
         textArea.id = "vidscript-slider-content-left-results-textarea";
+        textArea.classList.add("hidden");
         textArea.placeholder = "Results will appear here...";
         sliderContentLeftResults.appendChild(textArea);
 
@@ -440,9 +441,99 @@ const DOMManager = (() => {
     };
 
     const createSliderExtractionModeToggle = () => {
-        const sliderExtractionModeToggle = document.createElement("div");
-        sliderExtractionModeToggle.id = "vidscript-slider-extraction-mode-toggle";
-        return sliderExtractionModeToggle;
+        const wrapper = document.createElement("div");
+        wrapper.id = "vidscript-slider-extraction-mode-toggle";
+
+        // Toggle button container
+        const button = document.createElement("div");
+        button.id = "vidscript-slider-extraction-mode-toggle-button";
+
+        // Circle inside toggle
+        const circle = document.createElement("div");
+        circle.id = "vidscript-slider-extraction-mode-toggle-circle";
+        button.appendChild(circle);
+
+        // Label with icon
+        const label = document.createElement("span");
+        label.id = "vidscript-slider-extraction-mode-toggle-label";
+        label.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512">
+                <path fill="currentColor" d="M448 80c8.8 0 16 7.2 16 16v319.8l-5-6.5l-136-176c-4.5-5.9-11.6-9.3-19-9.3s-14.4 3.4-19 9.3l-83 107.4l-30.5-42.7c-4.5-6.3-11.7-10-19.5-10s-15 3.7-19.5 10.1l-80 112l-4.5 6.2V96c0-8.8 7.2-16 16-16zM64 32C28.7 32 0 60.7 0 96v320c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64zm80 192a48 48 0 1 0 0-96a48 48 0 1 0 0 96"/>
+            </svg>        
+        `;
+
+        wrapper.appendChild(button);
+        wrapper.appendChild(label);
+
+        // Initial mode state
+        let currentMode = "image";
+        try {
+            currentMode = ConfigManager.getFrameData().mode || "image";
+        } catch (e) {
+            console.error("Error getting frame data:", e);
+        }
+
+        // Toggle click handler
+        button.addEventListener("click", () => {
+            currentMode = currentMode === "image" ? "text" : "image";
+
+            ConfigManager.updateFrameData({mode: currentMode});
+
+            // Animate circle (by moving it to the right or left)
+            if (currentMode === "text") {
+                circle.style.left = "23px";
+                // change the label svg
+                label.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 1536 1792">
+                        <path fill="currentColor" d="M1468 380q28 28 48 76t20 88v1152q0 40-28 68t-68 28H96q-40 0-68-28t-28-68V96q0-40 28-68T96 0h896q40 0 88 20t76 48zm-444-244v376h376q-10-29-22-41l-313-313q-12-12-41-22m384 1528V640H992q-40 0-68-28t-28-68V128H128v1536zM384 800q0-14 9-23t23-9h704q14 0 23 9t9 23v64q0 14-9 23t-23 9H416q-14 0-23-9t-9-23zm736 224q14 0 23 9t9 23v64q0 14-9 23t-23 9H416q-14 0-23-9t-9-23v-64q0-14 9-23t23-9zm0 256q14 0 23 9t9 23v64q0 14-9 23t-23 9H416q-14 0-23-9t-9-23v-64q0-14 9-23t23-9z"/>
+                    </svg>
+                `;
+
+                // toggle textarea
+                const textarea = document.querySelector(
+                    "#vidscript-slider-content-left-results-textarea"
+                );
+                textarea.classList.remove("hidden");
+
+                // toggle canvas
+                const canvas = document.querySelector(
+                    "#vidscript-slider-content-left-results-canvas"
+                );
+                canvas.classList.add("hidden");
+            } else {
+                circle.style.left = "3px";
+                // change the label svg
+                label.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512">
+                        <path fill="currentColor" d="M448 80c8.8 0 16 7.2 16 16v319.8l-5-6.5l-136-176c-4.5-5.9-11.6-9.3-19-9.3s-14.4 3.4-19 9.3l-83 107.4l-30.5-42.7c-4.5-6.3-11.7-10-19.5-10s-15 3.7-19.5 10.1l-80 112l-4.5 6.2V96c0-8.8 7.2-16 16-16zM64 32C28.7 32 0 60.7 0 96v320c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64zm80 192a48 48 0 1 0 0-96a48 48 0 1 0 0 96"/>
+                    </svg>        
+                `;
+
+                // toggle textarea
+                const textarea = document.querySelector(
+                    "#vidscript-slider-content-left-results-textarea"
+                );
+                textarea.classList.add("hidden");
+
+                // toggle canvas
+                const canvas = document.querySelector(
+                    "#vidscript-slider-content-left-results-canvas"
+                );
+                canvas.classList.remove("hidden");
+            }
+
+            console.log(`🔄 Extraction mode switched to: ${currentMode}`);
+
+            // Emit event if EventManager exists
+            if (typeof EventManager !== "undefined") {
+                EventManager.emit("extraction-mode-changed", currentMode);
+            }
+        });
+
+        // Initialize circle position
+        circle.style.left = "3px";
+
+        return wrapper;
     };
 
     const createSliderContentLeftActions = () => {
@@ -592,6 +683,30 @@ const DOMManager = (() => {
     const createSliderContentRightResults = () => {
         const sliderContentRightResults = document.createElement("div");
         sliderContentRightResults.id = "vidscript-slider-content-right-results";
+
+        // chat
+        const chat = document.createElement("div");
+        chat.id = "vidscript-slider-content-right-results-chat";
+        sliderContentRightResults.appendChild(chat);
+
+        // inner text area
+        const textArea = document.createElement("textarea");
+        textArea.id = "vidscript-slider-content-right-results-textarea";
+        textArea.placeholder = "Write your text here...";
+        sliderContentRightResults.appendChild(textArea);
+
+        // send button
+        const sendBtn = document.createElement("button");
+        sendBtn.id = "vidscript-slider-content-right-results-send-btn";
+        sendBtn.ariaLabel = "Send text";
+        sendBtn.className = "controller-btn";
+        sendBtn.innerHTML = /*html*/ `
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 1700 1900">
+            <path fill="currentColor" d="M1764 43q33 24 27 64l-256 1536q-5 29-32 45q-14 8-31 8q-11 0-24-5l-527-215l-298 327q-18 21-47 21q-14 0-23-4q-19-7-30-23.5t-11-36.5v-452L40 1115q-37-14-40-55q-3-39 32-59L1696 41q35-21 68 2m-342 1499l221-1323l-1434 827l336 137l863-639l-478 797z"/>
+        </svg>            
+        `;
+        sliderContentRightResults.appendChild(sendBtn);
+
         return sliderContentRightResults;
     };
 

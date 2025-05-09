@@ -451,10 +451,12 @@ const StyleManager = (() => {
 
             #vidscript-slider {
                 position: fixed;
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
                 left: 50%;
                 bottom: 0;
-                transform: translateX(-50%) translateY(0);
-                /* transform: translateX(-50%) translateY(100%); */
+                transform: translateX(-50%) translateY(100%);
                 width: 95vw;
                 height: 90vh;
                 background-color: white;
@@ -467,6 +469,10 @@ const StyleManager = (() => {
                 padding: 0 1.5rem;
                 transition: transform 0.3s ease-in-out;
                 overflow: hidden;
+            }
+
+            #vidscript-slider * {
+                box-sizing: border-box;
             }
 
             #vidscript-slider.dark {
@@ -518,13 +524,14 @@ const StyleManager = (() => {
 
             #vidscript-slider-content {
                 padding: 1.5rem;
-                padding-top: 3rem;
+                height: 100%;
             }
 
             #vidscript-slider-content-container {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 50px;
+                height: 100%;
             }
 
             .controller-btn {
@@ -538,6 +545,11 @@ const StyleManager = (() => {
                 border: none;
                 width: min-content;
                 padding: 5px 12px 5px 5px;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+                -webkit-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+                -moz-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+                -ms-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+                -o-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
             }
 
             .controller-btn:hover {
@@ -545,8 +557,8 @@ const StyleManager = (() => {
             }
 
             .controller-btn .icon-circle {
-                width: 18px;
-                height: 18px;
+                width: 30px;
+                height: 30px;
                 background: #fff;
                 border-radius: 50%;
                 position: relative;
@@ -581,12 +593,145 @@ const StyleManager = (() => {
                 align-items: center;
                 justify-content: space-between;
                 gap: 15px;
+                width: 100%;
             }
 
             #vidscript-slider-content-right-controllers-title {
                 font-size: 20px;
                 font-weight: bold;
                 color: #574a4a;
+            }
+
+            #vidscript-slider-content-left {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 20px;
+                height: 100%;
+            }
+
+            #vidscript-slider-content-left-results {
+                width: 100%;
+                height: 100%;
+            }
+
+            #vidscript-slider-content-left-results-canvas {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+                border: 2px solid #ff4f4f;
+                border-radius: 8px;
+            }
+
+            #vidscript-slider-content-left-results-textarea {
+                width: 100%;
+                height: 100%;
+                border: 2px solid #ff4f4f;
+                border-radius: 8px;
+                padding: 10px;
+                overflow-y: scroll;
+                resize: none;
+            }
+
+            #vidscript-slider-content-left-results-textarea:focus {
+                outline: none;
+            }
+
+            .hidden {
+                display: none;
+            }
+
+            #vidscript-slider-extraction-mode-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                font-family: sans-serif;
+                background-color: transparent;
+                border-radius: 20px;
+                width: fit-content;
+            }
+
+            #vidscript-slider-extraction-mode-toggle-button {
+                width: 46px;
+                height: 26px;
+                background: #ff4f4f;
+                border-radius: 60px;
+                position: relative;
+                cursor: pointer;
+                transition: background 0.3s ease;
+            }
+            
+            #vidscript-slider-extraction-mode-toggle-circle {
+                width: 20px;
+                height: 20px;
+                background: white;
+                border-radius: 50%;
+                position: absolute;
+                top: 3px;
+                transition: left 0.3s;
+            }
+
+            #vidscript-slider-content-right {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 20px;
+                height: 100%;
+            }
+            
+            #vidscript-slider-content-right-results {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                border: 2px solid #ff4f4f;
+                border-radius: 8px;
+            }
+            
+            #vidscript-slider-content-right-results-chat {
+                width: 100%;
+                height: 100%;
+                padding: 10px;
+            }
+
+            #vidscript-slider-content-right-results-textarea {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                height: 50px;
+                border: 0;
+                border-top: 1px solid #ddd;
+                border-radius: 0 0 8px 8px;
+                padding: 10px;
+                resize: none;
+            }
+
+            #vidscript-slider-content-right-results-textarea:focus {
+                outline: none;
+            }
+
+            #vidscript-slider-content-right-results-send-btn {
+                position: absolute;
+                bottom: 6px;
+                right: 6px;
+                width: 35px;
+                height: 35px;
+                border: none;
+                border-radius: 50%;
+                background: #ff4f4f;
+                cursor: pointer;
+                transition: background 0.3s ease;
+            }
+            
+
+            #vidscript-slider-content-right-results-send-btn:hover {
+                background: #ff2f2f;
             }
 
             @keyframes revealBorder {

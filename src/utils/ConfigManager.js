@@ -4,6 +4,7 @@ import EventManager from "./EventManager.js";
 const ConfigManager = (() => {
     const states = ["OFF", "READY", "EXTRACTING", "DONE"];
     const selectorStates = ["rectangle", "freehand"];
+    const extractionModes = ["image", "text"];
 
     // Core configuration with defaults
     const config = {
@@ -38,9 +39,15 @@ const ConfigManager = (() => {
         // Current state of the application
         state: "OFF",
 
-        // Current extraction image data
-        extractionImage: {
+        // Current frame data
+        frameData: {
+            mode: "image",
+            canvas: null,
             dataUrl: null,
+            width: null,
+            height: null,
+            top: null,
+            left: null,
             currentTime: null,
             timestamp: null,
             text: null,
@@ -80,12 +87,18 @@ const ConfigManager = (() => {
             return value;
         },
 
-        getExtractionImage: () => {
-            return config.extractionImage;
+        updateFrameData: (frameData) => {
+            // Validate mode
+            if (frameData.mode && !extractionModes.includes(frameData.mode)) {
+                console.error(`Invalid mode: ${frameData.mode}`);
+                return;
+            }
+
+            config.frameData = { ...config.frameData, ...frameData };
         },
 
-        updateExtractionImage: (image) => {
-            config.extractionImage = { ...config.extractionImage, ...image };
+        getFrameData: () => {
+            return config.frameData;
         },
 
         loadSavedSettings: () => {
@@ -122,6 +135,7 @@ const ConfigManager = (() => {
                         EventManager.emit("hide-results");
                         break;
                     case "EXTRACTING":
+                        EventManager.emit("update-results");
                         EventManager.emit("extract-text");
                         break;
                     case "DONE":
@@ -201,6 +215,20 @@ const ConfigManager = (() => {
                 boxColor: "rgba(255, 0, 0, 0.5)",
                 textColor: "rgba(255, 255, 255, 0.9)",
                 overlayBackground: "rgba(0, 0, 0, 0.6)",
+            };
+
+            config.frameData = {
+                mode: "image",
+                canvas: null,
+                dataUrl: null,
+                width: null,
+                height: null,
+                top: null,
+                left: null,
+                currentTime: null,
+                timestamp: null,
+                text: null,
+                textOverlay: null,
             };
 
             config.selectorSettings = {

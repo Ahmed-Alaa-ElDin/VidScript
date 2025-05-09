@@ -58,10 +58,10 @@ const VidScriptApp = (() => {
                 VideoManager.pauseVideo();
 
                 // Capture current frame
-                const frameData = await VideoManager.captureCurrentFrame();
+                await VideoManager.captureCurrentFrame();
 
                 // Add overlay
-                UIFactory.createVideoOverlay(frameData);
+                UIFactory.createVideoOverlay();
             } catch (error) {
                 console.error("❌ Error adding overlay:", error);
             }
@@ -77,10 +77,10 @@ const VidScriptApp = (() => {
                 VideoManager.pauseVideo();
 
                 // Capture current frame
-                const frameData = await VideoManager.captureCurrentFrame();
+                await VideoManager.captureCurrentFrame();
 
                 // Resize overlay
-                UIFactory.resizeVideoOverlay(frameData);
+                UIFactory.resizeVideoOverlay();
             } catch (error) {
                 console.error("❌ Error resizing overlay:", error);
             }
@@ -129,11 +129,13 @@ const VidScriptApp = (() => {
         // Extract text button click
         EventManager.on("extract-text", async () => {
             try {
-                let frameData = ConfigManager.getExtractionImage();
+                let frameData = ConfigManager.getFrameData();
                 if (!frameData) {
                     NotificationManager.show("Please select an area to extract text from", "error");
                     return;
                 }
+
+                console.log("frameData", frameData);
 
                 // Process the frame to extract text
                 NotificationManager.show("Extracting text from video...", "info");
@@ -179,6 +181,22 @@ const VidScriptApp = (() => {
             document.body.style.overflow = "auto";
             vidScriptOverlay.classList.remove("active");
             vidScriptSlider.classList.remove("active");
+
+            // remove results image
+            const resultsImage = document.querySelector("#vidscript-results-image");
+            if (resultsImage) {
+                resultsImage.remove();
+            }
+        });
+
+        EventManager.on("update-results", () => {
+            const resultsSlider = document.querySelector("#vidscript-slider-content-left-results-canvas");
+            if (!resultsSlider) {
+                return;
+            }
+
+            resultsSlider.innerHTML = "";
+            resultsSlider.appendChild(UIFactory.createResultsCanvas());
         });
 
         // // Video paused event

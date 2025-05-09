@@ -275,7 +275,9 @@ const UIFactory = (() => {
     };
 
     // Create the video overlay
-    const createVideoOverlay = (frameData) => {
+    const createVideoOverlay = () => {
+        const frameData = ConfigManager.getFrameData();
+
         const videoContainer = document.querySelector(".html5-video-container");
         if (!videoContainer) return false;
 
@@ -315,7 +317,7 @@ const UIFactory = (() => {
         const selectionToggleContainer = createSelectorToggle();
 
         // Selection canvas
-        const selectionCanvas = createSelectionCanvas(frameData);
+        const selectionCanvas = createSelectionCanvas();
 
         // Add to DOM
         overlay.appendChild(inner);
@@ -326,7 +328,7 @@ const UIFactory = (() => {
         videoContainer.appendChild(borderOverlay);
 
         // Initialize the tools on that canvas:
-        setupSelectionTools(selectionCanvas, frameData);
+        setupSelectionTools(selectionCanvas);
 
         // Add click event to overlay
         overlay.addEventListener("click", (e) => {
@@ -339,13 +341,15 @@ const UIFactory = (() => {
 
     // Resize the video overlay
     // Resize the video overlay
-    const resizeVideoOverlay = (frameData) => {
+    const resizeVideoOverlay = () => {
+        const frameData = ConfigManager.getFrameData();
+
         // Find the existing overlay
         const overlay = document.querySelector("#vidscript-overlay");
 
         // If no overlay exists, create one
         if (!overlay) {
-            return createVideoOverlay(frameData);
+            return createVideoOverlay();
         }
 
         // Get old dimensions before updating
@@ -529,7 +533,8 @@ const UIFactory = (() => {
     };
 
     // Create selection canvas
-    const createSelectionCanvas = (frameData) => {
+    const createSelectionCanvas = () => {
+        const frameData = ConfigManager.getFrameData();
         const selectionCanvas = document.createElement("canvas");
         selectionCanvas.id = "vidscript-selection-canvas";
         selectionCanvas.width = frameData.width;
@@ -551,7 +556,7 @@ const UIFactory = (() => {
     };
 
     // Setup selection tools
-    const setupSelectionTools = (canvas, frameData) => {
+    const setupSelectionTools = (canvas) => {
         // Drawing context and state variables
         const ctx = canvas.getContext("2d");
 
@@ -559,7 +564,7 @@ const UIFactory = (() => {
         initModeToggleListener(ctx);
 
         // Set up event listeners with capture phase
-        setupSelectionEventListeners(canvas, ctx, frameData);
+        setupSelectionEventListeners(canvas, ctx);
     };
 
     // Initialize mode toggle listener
@@ -574,7 +579,7 @@ const UIFactory = (() => {
     };
 
     // Set up all event listeners
-    const setupSelectionEventListeners = (canvas, ctx, frameData) => {
+    const setupSelectionEventListeners = (canvas, ctx) => {
         // Mouse down - start drawing
         canvas.addEventListener(
             "mousedown",
@@ -610,7 +615,7 @@ const UIFactory = (() => {
 
                 if (!ConfigManager.getCurrentSelectorSettings().isActive) return;
 
-                finishDrawing(ctx, ConfigManager.getCurrentSelectorSettings(), frameData);
+                finishDrawing(ctx, ConfigManager.getCurrentSelectorSettings());
             },
             true
         );
@@ -694,26 +699,26 @@ const UIFactory = (() => {
     };
 
     // Handle finishing a drawing operation
-    const finishDrawing = (ctx, drawingState, frameData) => {
+    const finishDrawing = (ctx, drawingState) => {
         ConfigManager.updateSelectorSettings("isActive", false);
 
         // Clear the canvas
         // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
         // Process the selected region
-        processSelectedRegion(frameData);
+        processSelectedRegion();
     };
 
     // Process the selected region for OCR
-    const processSelectedRegion = (frameData) => {
+    const processSelectedRegion = () => {
         const image = new Image();
-        image.src = frameData.dataUrl;
+        image.src = ConfigManager.getFrameData().dataUrl;
 
         image.onload = () => {
             const cropData = extractImageRegion(image);
             if (!cropData) return;
 
-            ConfigManager.updateExtractionImage({
+            ConfigManager.updateFrameData({
                 dataUrl: cropData.dataUrl,
                 currentTime: VideoManager.getCurrentTime(),
                 timestamp: Date.now(),
@@ -721,7 +726,6 @@ const UIFactory = (() => {
 
             ConfigManager.updateState("EXTRACTING");
 
-            console.log("cropData", ConfigManager.getExtractionImage());
             // Download image
             // downloadImage(cropData.dataUrl);
 
@@ -852,6 +856,14 @@ const UIFactory = (() => {
         );
     };
 
+    const createResultsCanvas = () => {
+        const canvas = document.createElement("img");
+        canvas.id = "vidscript-results-image";
+        canvas.src = ConfigManager.getFrameData().dataUrl;
+
+        return canvas;
+    };
+
     // Display OCR result
     const displayOCRResult = (text) => {
         if (text && text.trim().length > 0) {
@@ -870,6 +882,7 @@ const UIFactory = (() => {
         createVideoOverlay,
         resizeVideoOverlay,
         removeVideoOverlay,
+        createResultsCanvas,
     };
 })();
 

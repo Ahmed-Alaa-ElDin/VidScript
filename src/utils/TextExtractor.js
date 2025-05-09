@@ -11,7 +11,7 @@ const TextExtractor = (() => {
             NotificationManager.show("Processing frame...", "info");
 
             // Get extraction image
-            let image = ConfigManager.getExtractionImage();
+            let image = ConfigManager.getFrameData();
 
             return {
                 success: true,
