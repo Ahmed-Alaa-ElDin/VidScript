@@ -135,22 +135,9 @@ const VidScriptApp = (() => {
                     return;
                 }
 
-                console.log("frameData", frameData);
-
                 // Process the frame to extract text
                 NotificationManager.show("Extracting text from video...", "info");
-                const result = await TextExtractor.processFrame(frameData);
-
-                if (result.success) {
-                    ConfigManager.updateState("DONE");
-
-                    NotificationManager.show("Text extracted successfully!", "success");
-
-                    // Show extracted text in modal
-                    // UIFactory.createModal("Extracted Text", result.text);
-                } else {
-                    NotificationManager.show(`Text extraction failed: ${result.error}`, "error");
-                }
+                await TextExtractor.processFrame();
             } catch (error) {
                 console.error("Extract text error:", error);
                 NotificationManager.show(`Error: ${error.message}`, "error");
@@ -168,6 +155,10 @@ const VidScriptApp = (() => {
             document.body.style.overflow = "hidden";
             vidScriptOverlay.classList.add("active");
             vidScriptSlider.classList.add("active");
+
+            // Update results slider
+            UIFactory.drawResultsOnCanvas();
+            UIFactory.addResultsToTextArea();
         });
 
         EventManager.on("hide-results", () => {
@@ -182,11 +173,11 @@ const VidScriptApp = (() => {
             vidScriptOverlay.classList.remove("active");
             vidScriptSlider.classList.remove("active");
 
-            // remove results image
-            const resultsImage = document.querySelector("#vidscript-results-image");
-            if (resultsImage) {
-                resultsImage.remove();
-            }
+            // Reset the slider
+            DOMManager.resetSlider();
+
+            // Reset settings
+            ConfigManager.resetExtractedImageData();
         });
 
         EventManager.on("update-results", () => {
@@ -197,6 +188,10 @@ const VidScriptApp = (() => {
 
             resultsSlider.innerHTML = "";
             resultsSlider.appendChild(UIFactory.createResultsCanvas());
+        });
+
+        EventManager.on("send-llm-request", (text) => {
+            chrome.runtime.sendMessage({ type: "send-llm-request", text });
         });
 
         // // Video paused event

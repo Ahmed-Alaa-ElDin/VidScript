@@ -43,7 +43,8 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "icons/*"
+                "icons/*",
+                "styles/*"
             ],
             "matches": [
                 "*://*.youtube.com/*"
@@ -51,10 +52,11 @@
         }
     ],
     "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://api.ocr.space"
+        "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://api.ocr.space https://api.cohere.ai"
     },
     "host_permissions": [
         "https://www.youtube.com/*",
-        "https://api.ocr.space/*"
+        "https://api.ocr.space/*",
+        "https://api.cohere.ai/*"
     ]
 }

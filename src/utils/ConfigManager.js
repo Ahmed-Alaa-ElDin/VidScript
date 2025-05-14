@@ -8,23 +8,6 @@ const ConfigManager = (() => {
 
     // Core configuration with defaults
     const config = {
-        selectors: {
-            targetButtons: ".ytp-right-controls", // Target buttons container
-            existingButton: "#vidscript-wrapper", // Our button wrapper
-            videoContainer: ".html5-video-container", // Video container
-            videoElement: "video", // Video element
-        },
-        attributes: {
-            buttonId: "vidscript-wrapper",
-            buttonText: "VidScript",
-            title: "Extract Text",
-
-            buttonClasses: "ytp-vidscript-button",
-            buttonClassesLegacy:
-                "yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--enable-backdrop-filter-experiment",
-            ariaLabel: "Extract Text",
-        },
-
         // Default settings that can be overridden by user
         settings: {
             showBoundingBoxes: false,
@@ -41,8 +24,19 @@ const ConfigManager = (() => {
 
         // Current frame data
         frameData: {
-            mode: "image",
             canvas: null,
+            dataUrl: null,
+            width: null,
+            height: null,
+            top: null,
+            left: null,
+            currentTime: null,
+            timestamp: null,
+        },
+
+        // Extracted image data
+        extractedImageData: {
+            mode: "image",
             dataUrl: null,
             width: null,
             height: null,
@@ -88,17 +82,40 @@ const ConfigManager = (() => {
         },
 
         updateFrameData: (frameData) => {
-            // Validate mode
-            if (frameData.mode && !extractionModes.includes(frameData.mode)) {
-                console.error(`Invalid mode: ${frameData.mode}`);
-                return;
-            }
-
             config.frameData = { ...config.frameData, ...frameData };
         },
 
         getFrameData: () => {
             return config.frameData;
+        },
+
+        updateExtractedImageData: (imageData) => {
+            // Validate mode
+            if (imageData.mode && !extractionModes.includes(imageData.mode)) {
+                console.error(`Invalid mode: ${imageData.mode}`);
+                return;
+            }
+
+            config.extractedImageData = { ...config.extractedImageData, ...imageData };
+        },
+
+        getExtractedImageData: () => {
+            return config.extractedImageData;
+        },
+
+        resetExtractedImageData: () => {
+            config.extractedImageData = {
+                mode: "image",
+                dataUrl: null,
+                width: null,
+                height: null,
+                top: null,
+                left: null,
+                currentTime: null,
+                timestamp: null,
+                text: null,
+                textOverlay: null,
+            };
         },
 
         loadSavedSettings: () => {

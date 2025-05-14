@@ -3,6 +3,10 @@ import NotificationManager from "./NotificationManager.js";
 import UIFactory from "./UIFactory.js";
 import VideoManager from "./VideoManager.js";
 import EventManager from "./EventManager.js";
+import ChatService from "./ChatService.js";
+import { Marked } from "marked";
+import { markedHighlight } from "marked-highlight";
+import hljs from 'highlight.js';
 
 // Module for DOM operations
 const DOMManager = (() => {
@@ -11,17 +15,27 @@ const DOMManager = (() => {
     let resizeObserver = null;
     let lastVideoSize = { width: 0, height: 0 };
 
+    // Initialize marked with highlight.js
+    const marked = new Marked(
+        markedHighlight({
+            emptyLangClass: "hljs",
+            langPrefix: "hljs language-",
+            highlight(code, lang, info) {
+                const language = hljs.getLanguage(lang) ? lang : "plaintext";
+                return hljs.highlight(code, { language }).value;
+            },
+        })
+    );
+
     // Insert button into YouTube player
     const insertButton = () => {
-        const { targetButtons, existingButton } = ConfigManager.get("selectors");
-
         // Check if button already exists
-        if (document.querySelector(existingButton)) {
+        if (document.querySelector("#vidscript-wrapper")) {
             return true;
         }
 
         // Try to find button container
-        const buttonContainer = document.querySelector(targetButtons);
+        const buttonContainer = document.querySelector(".ytp-right-controls");
 
         if (!buttonContainer) {
             return false;
@@ -160,7 +174,7 @@ const DOMManager = (() => {
 
                 // Small delay to let YouTube UI update
                 setTimeout(() => {
-                    if (!document.querySelector(ConfigManager.get("selectors.existingButton"))) {
+                    if (!document.querySelector("#vidscript-wrapper")) {
                         if (insertButton()) {
                             console.log("✅ VidScript button added after navigation");
                         } else {
@@ -174,7 +188,7 @@ const DOMManager = (() => {
                 }, 1000);
             } else {
                 // Periodic check for button if not present
-                if (!document.querySelector(ConfigManager.get("selectors.existingButton"))) {
+                if (!document.querySelector("#vidscript-wrapper")) {
                     if (insertButton()) {
                         console.log("✅ VidScript button added via interval check");
                     }
@@ -384,15 +398,11 @@ const DOMManager = (() => {
         const sliderContent = document.createElement("div");
         sliderContent.id = "vidscript-slider-content";
 
-        const sliderContentContainer = document.createElement("div");
-        sliderContentContainer.id = "vidscript-slider-content-container";
-        sliderContent.appendChild(sliderContentContainer);
-
         const sliderContentLeft = createSliderContentLeft();
-        sliderContentContainer.appendChild(sliderContentLeft);
+        sliderContent.appendChild(sliderContentLeft);
 
         const sliderContentRight = createSliderContentRight();
-        sliderContentContainer.appendChild(sliderContentRight);
+        sliderContent.appendChild(sliderContentRight);
 
         return sliderContent;
     };
@@ -468,7 +478,7 @@ const DOMManager = (() => {
         // Initial mode state
         let currentMode = "image";
         try {
-            currentMode = ConfigManager.getFrameData().mode || "image";
+            currentMode = ConfigManager.getExtractedImageData().mode || "image";
         } catch (e) {
             console.error("Error getting frame data:", e);
         }
@@ -477,7 +487,7 @@ const DOMManager = (() => {
         button.addEventListener("click", () => {
             currentMode = currentMode === "image" ? "text" : "image";
 
-            ConfigManager.updateFrameData({mode: currentMode});
+            ConfigManager.updateExtractedImageData({ mode: currentMode });
 
             // Animate circle (by moving it to the right or left)
             if (currentMode === "text") {
@@ -558,11 +568,18 @@ const DOMManager = (() => {
         copyResultsBtn.ariaLabel = "Copy results";
         copyResultsBtn.className = "controller-btn";
         copyResultsBtn.innerHTML = /*html*/ `
-        <div class="icon-circle">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 448 512"><path fill="currentColor" d="m433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941M266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6m128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6m6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243z"/></svg>
-        </div>
-        <span class="btn-text">Copy</span>
+            <div class="icon-circle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 448 512"><path fill="currentColor" d="m433.941 65.941l-51.882-51.882A48 48 0 0 0 348.118 0H176c-26.51 0-48 21.49-48 48v48H48c-26.51 0-48 21.49-48 48v320c0 26.51 21.49 48 48 48h224c26.51 0 48-21.49 48-48v-48h80c26.51 0 48-21.49 48-48V99.882a48 48 0 0 0-14.059-33.941M266 464H54a6 6 0 0 1-6-6V150a6 6 0 0 1 6-6h74v224c0 26.51 21.49 48 48 48h96v42a6 6 0 0 1-6 6m128-96H182a6 6 0 0 1-6-6V54a6 6 0 0 1 6-6h106v88c0 13.255 10.745 24 24 24h88v202a6 6 0 0 1-6 6m6-256h-64V48h9.632c1.591 0 3.117.632 4.243 1.757l48.368 48.368a6 6 0 0 1 1.757 4.243z"/></svg>
+            </div>
+            <span class="btn-text">Copy</span>
         `;
+
+        copyResultsBtn.addEventListener("click", () => {
+            const text = ConfigManager.getExtractedImageData().text;
+            navigator.clipboard.writeText(text);
+            NotificationManager.show("Text copied to clipboard!", "success");
+        });
+
         return copyResultsBtn;
     };
 
@@ -686,18 +703,25 @@ const DOMManager = (() => {
 
         // chat
         const chat = document.createElement("div");
-        chat.id = "vidscript-slider-content-right-results-chat";
+        chat.id = "vidscript-slider-chat-container";
         sliderContentRightResults.appendChild(chat);
 
         // inner text area
         const textArea = document.createElement("textarea");
-        textArea.id = "vidscript-slider-content-right-results-textarea";
+        textArea.id = "vidscript-slider-chat-textarea";
         textArea.placeholder = "Write your text here...";
         sliderContentRightResults.appendChild(textArea);
 
         // send button
+        const sendBtn = createSliderChatSendBtn();
+        sliderContentRightResults.appendChild(sendBtn);
+
+        return sliderContentRightResults;
+    };
+
+    const createSliderChatSendBtn = () => {
         const sendBtn = document.createElement("button");
-        sendBtn.id = "vidscript-slider-content-right-results-send-btn";
+        sendBtn.id = "vidscript-slider-chat-send-btn";
         sendBtn.ariaLabel = "Send text";
         sendBtn.className = "controller-btn";
         sendBtn.innerHTML = /*html*/ `
@@ -705,9 +729,118 @@ const DOMManager = (() => {
             <path fill="currentColor" d="M1764 43q33 24 27 64l-256 1536q-5 29-32 45q-14 8-31 8q-11 0-24-5l-527-215l-298 327q-18 21-47 21q-14 0-23-4q-19-7-30-23.5t-11-36.5v-452L40 1115q-37-14-40-55q-3-39 32-59L1696 41q35-21 68 2m-342 1499l221-1323l-1434 827l336 137l863-639l-478 797z"/>
         </svg>            
         `;
-        sliderContentRightResults.appendChild(sendBtn);
 
-        return sliderContentRightResults;
+        sendBtn.addEventListener("click", () => {
+            const textArea = document.querySelector("#vidscript-slider-chat-textarea");
+            const text = textArea.value;
+
+            if (text) {
+                // Clear text area
+                textArea.value = "";
+
+                // Send text to LLM
+                ChatService.sendMessage(text);
+            }
+        });
+
+        return sendBtn;
+    };
+
+    const addSliderChatLoadingState = () => {
+        const messageContainer = createSliderChatMessageContainer("ai");
+
+        const loadingState = document.createElement("div");
+        loadingState.id = "vidscript-slider-chat-loader";
+
+        const loadingAnimation = document.createElement("div");
+        loadingAnimation.id = "vidscript-slider-chat-loader-animation";
+        loadingState.appendChild(loadingAnimation);
+
+        const chat = document.querySelector("#vidscript-slider-chat-container");
+        chat.appendChild(messageContainer);
+        messageContainer.appendChild(loadingState);
+    };
+
+    const createSliderChatMessageContainer = (type = "user") => {
+        const messageContainer = document.createElement("div");
+        messageContainer.className = `vidscript-slider-chat-message-container vidscript-slider-chat-message-${type}-container`;
+        return messageContainer;
+    };
+
+    const removeSliderChatLoadingState = () => {
+        const loadingState = document.querySelector("#vidscript-slider-chat-loader");
+        if (loadingState) {
+            loadingState.remove();
+        }
+    };
+
+    const addSliderChatMessage = (message, type = "user") => {
+        marked.use({
+            gfm: true,
+            breaks: true,
+            highlight(code, language) {
+                console.log("Highlighting code with language:", language);
+                try {
+                    // Check if language exists
+                    if (language && hljs.getLanguage(language)) {
+                        console.log("Language found, highlighting...");
+                        return hljs.highlight(code, { language }).value;
+                    } else {
+                        console.log("Language not found, using autodetect");
+                        return hljs.highlightAuto(code).value;
+                    }
+                } catch (error) {
+                    console.error("Highlight error:", error);
+                    return code; // Return original code if highlight fails
+                }
+            },
+        });
+
+        const html = marked.parse(message);
+        const messageContainer = createSliderChatMessageContainer(type);
+
+        const messageElement = document.createElement("div");
+        messageElement.className = `vidscript-slider-chat-message vidscript-slider-chat-message-${type}`;
+        messageElement.innerHTML = html;
+
+        messageContainer.appendChild(messageElement);
+
+        const chat = document.querySelector("#vidscript-slider-chat-container");
+        chat.appendChild(messageContainer);
+    };
+
+    const resetSlider = () => {
+        // reset toggle
+        const currentMode = ConfigManager.getExtractedImageData().mode;
+
+        if (currentMode === "text") {
+            const modeToggler = document.querySelector(
+                "#vidscript-slider-extraction-mode-toggle-button"
+            );
+            if (modeToggler) {
+                modeToggler.click();
+            }
+        }
+
+        // clear chat
+        const chat = document.querySelector("#vidscript-slider-chat-container");
+        if (chat) {
+            chat.innerHTML = "";
+        }
+
+        // clear text area
+        const textArea = document.querySelector("#vidscript-slider-chat-textarea");
+        if (textArea) {
+            textArea.value = "";
+        }
+
+        // remove results image
+        const resultsImage = document.querySelector(
+            "#vidscript-slider-content-left-results-canvas-wrapper"
+        );
+        if (resultsImage) {
+            resultsImage.remove();
+        }
     };
 
     return {
@@ -721,6 +854,10 @@ const DOMManager = (() => {
         cleanup,
         createResultsSlider,
         insertResultsSlider,
+        resetSlider,
+        addSliderChatLoadingState,
+        removeSliderChatLoadingState,
+        addSliderChatMessage,
     };
 })();
 

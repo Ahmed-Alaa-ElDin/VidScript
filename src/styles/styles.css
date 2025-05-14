@@ -1,0 +1,933 @@
+/* General :: Start */
+.hidden {
+    display: none !important;
+}
+
+/* General :: End */
+
+/* VidScript initiator toggler :: Start */
+#vidscript-wrapper {
+    display: inline-flex !important;
+    border-radius: 8px !important;
+    background: radial-gradient(60% 80% at 50% 100%, #999c, #666c) !important;
+    padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative;
+    top: -17px;
+    margin: 0 8px !important;
+    transition: background 0.3s ease;
+    cursor: pointer;
+}
+
+#vidscript-wrapper:hover {
+    background: radial-gradient(60% 80% at 50% 100%, #aaaa, #888c) !important;
+}
+
+#vidscript-wrapper.checked {
+    background: radial-gradient(60% 80% at 50% 100%, #b84b4b, #666c) !important;
+}
+
+#vidscript-wrapper span {
+    height: max-content !important;
+    line-height: normal !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    color: white !important;
+}
+
+#vidscript-toggler-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+    padding: 7px 8px !important;
+    cursor: pointer !important;
+}
+
+#vidscript-menu-button {
+    background: transparent !important;
+    border: none !important;
+    padding: 7px 8px !important;
+    cursor: pointer !important;
+    color: white !important;
+}
+
+#vidscript-switch-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: sans-serif;
+    background-color: transparent;
+    border-radius: 20px;
+    color: #fff;
+    width: fit-content;
+}
+
+#vidscript-switch-label {
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 16px;
+    background: #0a0d3330;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#vidscript-wrapper.checked #vidscript-switch-label {
+    background: rgba(177, 23, 23, 0.16);
+}
+
+#vidscript-toggle {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+#vidscript-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 34px;
+    transition: 0.3s;
+}
+
+#vidscript-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 2px;
+    top: 2px;
+    background-color: #979797;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+#vidscript-toggle:checked + #vidscript-toggle-slider:before {
+    transform: translateX(14px);
+    background-color: #fff;
+}
+
+#vidscript-toggle:checked + #vidscript-toggle-slider {
+    background-color: #b84b4b;
+}
+
+#vidscript-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: #222;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    z-index: 2000;
+    width: 250px;
+    padding: 8px 12px;
+    color: white;
+    font-family: sans-serif;
+    display: none;
+}
+
+#vidscript-menu.active {
+    display: block;
+}
+
+.vidscript-menu-item {
+    padding: 8px 12px;
+    margin: 4px 0;
+    display: flex;
+    line-height: normal;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 4px;
+}
+
+.vidscript-menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.vidscript-menu-header {
+    font-weight: bold;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 8px;
+    line-height: normal;
+    font-size: 14px;
+}
+
+#vidscript-state {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    border-radius: 4px;
+    z-index: 10000000;
+    font-weight: bold;
+    transition: opacity 0.3s ease-in-out;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.vidscript-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1500;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+}
+
+.vidscript-backdrop.active {
+    display: block;
+}
+
+#vidscript-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #222;
+    border-radius: 8px;
+    padding: 20px;
+    color: white;
+    z-index: 2000;
+    width: 500px;
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    display: none;
+}
+
+#vidscript-modal.active {
+    display: block;
+}
+
+.vidscript-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    width: 100%;
+    gap: 10px;
+}
+
+.vidscript-modal-header h3 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.vidscript-close-button {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    width: auto;
+    padding: 0;
+    font-size: 18px;
+}
+
+.vidscript-modal-content {
+    margin-bottom: 16px;
+}
+
+.vidscript-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.vidscript-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.vidscript-button-primary {
+    background: #b84b4b;
+    color: white;
+}
+
+.vidscript-button-primary:hover {
+    background: #d75a5a;
+}
+
+.vidscript-button-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.vidscript-button-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#vidscript-extracted-text {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    padding: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-family: monospace;
+    margin-bottom: 16px;
+}
+
+.vidscript-tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.vidscript-tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #000;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 100;
+}
+
+/* VidScript initiator toggler :: End */
+
+/* VidScript video overlay :: Start */
+#vidscript-overlay {
+    position: absolute;
+    overflow: hidden;
+    z-index: 9999;
+    pointer-events: auto;
+}
+
+#vidscript-overlay-inner {
+    background-size: cover;
+    width: 100% !important;
+    height: 100% !important;
+    mask-image: linear-gradient(to top, black 0%, black 0%, transparent 0%);
+    -webkit-mask-image: linear-gradient(to top, black 0%, black 0%, transparent 0%);
+    mask-size: 100% 100% !important;
+    -webkit-mask-size: 100% 100% !important;
+    animation: revealMask 2s ease-out forwards;
+}
+
+#vidscript-sparkle {
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    top: 100%;
+    left: 0;
+    background: radial-gradient(white, transparent);
+    box-shadow: 0 0 20px 10px rgb(182, 122, 122);
+    animation: sparkleMove 2s ease-out forwards;
+}
+
+#vidscript-border {
+    position: absolute !important;
+    box-sizing: border-box !important;
+    border: 5px solid;
+    border-image: linear-gradient(to top, #b84b4b, rgba(0, 0, 0, 0)) 1 100%;
+    pointer-events: none !important;
+    z-index: 9999 !important;
+    mask-image: linear-gradient(to top, black 0%, transparent 0%);
+    -webkit-mask-image: linear-gradient(to top, black 0%, transparent 0%);
+    mask-size: 100% 100%;
+    -webkit-mask-size: 100% 100%;
+    animation: revealBorder 2s ease-out forwards;
+}
+
+/* VidScript video overlay :: End */
+
+/* VidScript selection tools :: Start */
+#vidscript-selection-tools-wrapper {
+    position: absolute;
+    transform: translateY(-50%);
+    top: 50%;
+    left: 10px;
+    z-index: 10002;
+    pointer-events: none;
+    background: #888888cc;
+    padding: 6px 14px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+#vidscript-selector-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+#vidscript-selector-toggle-button {
+    width: 30px;
+    height: 16px;
+    background: #ff4f4f;
+    border-radius: 8px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#vidscript-selector-toggle-circle {
+    width: 14px;
+    height: 14px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    transition: left 0.3s;
+}
+
+#vidscript-selector-toggle-label {
+    color: white;
+    font-weight: bold;
+    height: 20px;
+    width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+}
+
+#vidscript-full-screen-selector {
+    width: 100%;
+    background: #ff4f4f;
+    box-shadow: 0 0 8px 1px #888888cc;
+    border-radius: 8px;
+    padding: 5px 0;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    overflow: hidden;
+    cursor: pointer;
+    z-index: 10002;
+    pointer-events: auto;
+}
+
+#vidscript-full-screen-selector:hover {
+    background: rgb(255, 59, 59);
+}
+/* VidScript selection tools :: End */
+
+/* Result Slider Overlay :: Start */
+#vidscript-results-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 100000;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#vidscript-results-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+/* Result Slider Overlay :: End */
+
+/* Result Slider :: Start */
+#vidscript-slider {
+    position: fixed;
+    display: none;
+    flex-direction: column;
+    gap: 1.5rem;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%) translateY(100%);
+    width: 95vw;
+    height: 90vh;
+    background-color: white;
+    z-index: 100000;
+    border-width: 3px 3px 0 3px;
+    border-style: solid;
+    border-color: #ff4f4f;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    padding: 0 1.5rem;
+    transition: transform 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+#vidscript-slider * {
+    box-sizing: border-box;
+}
+
+#vidscript-slider.dark {
+    background-color: #111827;
+    box-shadow: 0 10px 25px rgba(255, 255, 255, 0.15);
+}
+
+#vidscript-slider.active {
+    display: flex;
+    transform: translateX(-50%) translateY(0);
+    -webkit-transform: translateX(-50%) translateY(0);
+    -moz-transform: translateX(-50%) translateY(0);
+    -ms-transform: translateX(-50%) translateY(0);
+    -o-transform: translateX(-50%) translateY(0);
+}
+
+/* Slider Header :: Start */
+#vidscript-slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#vidscript-slider-header-title {
+    font-size: 2.5rem;
+    color: #574a4a;
+    font-weight: 600;
+    margin: 0;
+}
+
+#vidscript-slider-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#vidscript-close-slider-btn {
+    padding: 0.5rem;
+    border-radius: 9999px;
+    background-color: #ff4f4f;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+#vidscript-close-slider-btn:hover {
+    background-color: #ff2f2f;
+}
+/* Slider Header :: End */
+
+/* Slider Content :: Start */
+#vidscript-slider-content {
+    padding: 1.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    gap: 50px;
+}
+
+@media (min-width: 992px) {
+    #vidscript-slider-content {
+        flex-direction: row;
+    }
+}
+
+/* Controller Button :: Start */
+.controller-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    border-radius: 9999px;
+    background-color: #ff4f4f;
+    border: none;
+    width: min-content;
+    padding: 5px 12px 5px 5px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    -webkit-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    -moz-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    -ms-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    -o-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.controller-btn:hover {
+    background-color: #ff2f2f;
+}
+
+.controller-btn .icon-circle {
+    width: 30px;
+    height: 30px;
+    background: #fff;
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    color: black;
+    padding: 7px;
+}
+
+.controller-btn .icon-circle svg {
+    width: 100%;
+    height: 100%;
+}
+
+.controller-btn .btn-text {
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+/* Controller Button :: End */
+
+/* Slider Content :: Start */
+#vidscript-slider-content-left,
+#vidscript-slider-content-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    gap: 20px;
+    height: 100%;
+    overflow: hidden;
+}
+
+#vidscript-slider-content-left-actions,
+#vidscript-slider-content-right-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+#vidscript-slider-content-left-controllers,
+#vidscript-slider-content-right-controllers {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    width: 100%;
+}
+
+#vidscript-slider-content-right-controllers-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #574a4a;
+}
+
+#vidscript-slider-content-left-results,
+#vidscript-slider-content-right-results {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+#vidscript-slider-content-left-results {
+    position: relative;
+}
+#vidscript-slider-content-right-results {
+    position: relative;
+    border: 2px solid #ff4f4f;
+    border-radius: 8px;
+    padding-bottom: 60px;
+}
+
+/* Slider Content Left Results :: Start */
+#vidscript-slider-content-left-results-canvas {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ff4f4f;
+    border-radius: 8px;
+    flex: 1;
+}
+
+#vidscript-slider-content-left-results-textarea {
+    border: 2px solid #ff4f4f;
+    border-radius: 8px;
+    padding: 10px;
+    overflow-y: auto;
+    resize: none;
+    flex: 1;
+}
+
+#vidscript-slider-content-left-results-textarea:focus {
+    outline: none;
+}
+
+#vidscript-slider-extraction-mode-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: sans-serif;
+    background-color: transparent;
+    border-radius: 20px;
+    width: fit-content;
+}
+
+#vidscript-slider-extraction-mode-toggle-button {
+    width: 46px;
+    height: 26px;
+    background: #ff4f4f;
+    border-radius: 60px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#vidscript-slider-extraction-mode-toggle-circle {
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 3px;
+    transition: left 0.3s;
+}
+/* Slider Content Left Results :: End */
+
+/* Slider Content Right Results :: Start */
+#vidscript-slider-chat-container {
+    position: relative;
+    width: 100%;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+#vidscript-slider-chat-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+#vidscript-slider-chat-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#vidscript-slider-chat-container::-webkit-scrollbar-thumb {
+    background: #ff4f4f;
+    border-radius: 3px;
+}
+
+#vidscript-slider-chat-container::-webkit-scrollbar-thumb:hover {
+    background: #ff2f2f;
+}
+
+#vidscript-slider-chat-textarea {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 50px;
+    border: 0;
+    border-top: 1px solid #ddd;
+    border-radius: 0 0 8px 8px;
+    padding: 10px 50px 10px 15px;
+    resize: none;
+    box-sizing: border-box;
+}
+
+#vidscript-slider-chat-textarea:focus {
+    outline: none;
+}
+
+#vidscript-slider-chat-send-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 35px;
+    height: 35px;
+    border: none;
+    border-radius: 50%;
+    background: #ff4f4f;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#vidscript-results-image {
+    max-width: 100%;
+}
+
+#vidscript-results-overlay-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1001;
+}
+
+#vidscript-slider-chat-send-btn:hover {
+    background: #ff2f2f;
+}
+
+#vidscript-slider-chat-loader {
+    padding: 10px 15px;
+    width: 95px;
+    background-color: white;
+    border: 2px solid #ff4f4f;
+    border-radius: 20px;
+}
+
+#vidscript-slider-chat-loader-animation {
+    width: 10px;
+    aspect-ratio: 1;
+    background: #000;
+    border-radius: 50%;
+    animation: l6 0.5s infinite linear alternate;
+    transform: translateX(25px);
+}
+
+.vidscript-slider-chat-message-container {
+    display: flex;
+    width: 100%;
+}
+
+.vidscript-slider-chat-message-user-container {
+    justify-content: flex-start;
+}
+
+.vidscript-slider-chat-message-ai-container {
+    justify-content: flex-end;
+}
+
+.vidscript-slider-chat-message-error-container {
+    justify-content: center;
+}
+
+.vidscript-slider-chat-message-error {
+    color: red;
+}
+
+.vidscript-slider-chat-message-user {
+    max-width: 90%;
+    font-size: 16px;
+    background: #ff4f4f;
+    color: #fff;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 20px;
+    border-bottom-right-radius: 4px;
+}
+
+.vidscript-slider-chat-message-ai {
+    max-width: 90%;
+    font-size: 16px;
+    background: #fff;
+    border: 2px solid #ff4f4f;
+    color: #000;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 20px;
+    border-bottom-left-radius: 4px;
+}
+
+.vidscript-slider-chat-message {
+    max-width: 85%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    padding: 10px 15px;
+    border-radius: 18px;
+    margin: 2px 0;
+    line-height: 1.75em;
+}
+
+.vidscript-slider-chat-message ul,
+.vidscript-slider-chat-message ol {
+    padding-left: 20px;
+}
+
+.vidscript-slider-chat-message pre {
+    margin: 10px 0;
+}
+
+.vidscript-slider-chat-message pre>code {
+    padding: 10px;
+    border-radius: 8px;
+}
+/* Slider Content Right Results :: End */
+/* Slider Content :: End */
+
+/* Animation :: Start */
+@keyframes l6 {
+    0% {
+        box-shadow: 15px 0, -25px 0;
+    }
+    50% {
+        box-shadow: 15px 0, -15px 0;
+    }
+    100% {
+        box-shadow: 25px 0, -15px 0;
+    }
+}
+
+@keyframes revealBorder {
+    0% {
+        mask-image: linear-gradient(to top, black 0%, transparent 0%);
+        -webkit-mask-image: linear-gradient(to top, black 0%, transparent 0%);
+    }
+    100% {
+        mask-image: linear-gradient(to top, black 100%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to top, black 100%, transparent 100%);
+    }
+}
+
+@keyframes revealMask {
+    0% {
+        mask-image: linear-gradient(to top, black 0%, black 0%, transparent 0%);
+        -webkit-mask-image: linear-gradient(to top, black 0%, black 0%, transparent 0%);
+    }
+    100% {
+        mask-image: linear-gradient(to top, black 100%, black 100%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to top, black 100%, black 100%, transparent 100%);
+    }
+}
+
+@keyframes sparkleMove {
+    0% {
+        top: 100%;
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        top: 0%;
+        opacity: 0;
+    }
+}
+/* Animation :: End */

@@ -19,6 +19,7 @@ export default defineConfig({
             },
             output: {
                 entryFileNames: "[name].js",
+                assetFileNames: "[name].[ext]",
             },
         },
     },
@@ -33,6 +34,10 @@ export default defineConfig({
                 { src: "src/styles.css", dest: "" },
                 // Copy utils
                 { src: "src/utils/*", dest: "utils" },
+                // Copy styles.css
+                { src: "src/styles/styles.css", dest: "styles" },
+                // Copy highlight.js
+                { src: "node_modules/highlight.js/styles/atom-one-dark.min.css", dest: "styles" },
             ],
         }),
     ],

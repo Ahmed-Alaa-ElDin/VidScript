@@ -1,7 +1,8 @@
+const OCR_API_KEY = "K84343132688957";
+const COHERE_API_KEY = "a5uYux91bedScFI4mXlGV27DodhULlLugV12affa";
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "ocr-space-request" && message.image) {
-        const apiKey = "K84343132688957";
-
         const formData = new FormData();
         formData.append("base64Image", message.image);
         formData.append("language", "auto");
@@ -11,7 +12,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         fetch("https://api.ocr.space/parse/image", {
             method: "POST",
             headers: {
-                apikey: apiKey,
+                apikey: OCR_API_KEY,
             },
             body: formData,
         })
@@ -28,10 +29,51 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
             })
             .catch((error) => {
-                console.error("OCR.space Error:", error);
+                console.error("OCR Error:", error);
                 sendResponse({ success: false, error: error.message });
             });
 
         return true; // Keeps the channel open for async response
+    }
+
+    if (message.type === "send-llm-request" && message.text) {
+        console.log("Cohere Request:", message.text);
+        
+        fetch("https://api.cohere.ai/v2/chat", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${COHERE_API_KEY}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                model: "command-a-03-2025",
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are a helpful assistant.",
+                    },
+                    {
+                        role: "user",
+                        content: message.text,
+                    },
+                ],
+            }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Cohere Response:", data);
+                
+                if (data.message && data.message.content && data.message.content[0] && data.message.content[0].text) {
+                    sendResponse({ success: true, result: data.message.content[0].text });
+                } else {
+                    sendResponse({ success: false, error: "Empty response from Cohere" });
+                }
+            })
+            .catch(error => {
+                console.error("Cohere Error:", error);
+                sendResponse({ success: false, error: error.message });
+            });
+
+        return true;
     }
 });

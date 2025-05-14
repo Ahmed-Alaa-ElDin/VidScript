@@ -52,12 +52,10 @@ const UIFactory = (() => {
 
     // Create the main button
     const createMainButton = () => {
-        const { buttonId, buttonText, title } = ConfigManager.get("attributes");
-
         // Create main wrapper
         const wrapper = document.createElement("div");
-        wrapper.id = buttonId;
-        wrapper.title = title;
+        wrapper.id = "vidscript-wrapper";
+        wrapper.title = "Extract Text";
         wrapper.className = ConfigManager.getCurrentState() === "READY" ? "checked" : "";
 
         // Create toggler wrapper
@@ -70,7 +68,7 @@ const UIFactory = (() => {
 
         // Add text label
         const text = document.createElement("span");
-        text.textContent = buttonText;
+        text.textContent = "VidScript";
         togglerWrapper.appendChild(text);
 
         // Add toggle switch
@@ -527,6 +525,17 @@ const UIFactory = (() => {
 
         fullScreenSelector.addEventListener("click", (e) => {
             e.stopPropagation();
+
+            // Clear the old drawing
+            const selectionCanvas = document.getElementById("vidscript-selection-canvas");
+            if (selectionCanvas) {
+                selectionCanvas
+                    .getContext("2d")
+                    .clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
+            }
+
+            // Process the full screen
+            processSelectedRegion(true);
         });
 
         return selectionToolsWrapper;
@@ -699,26 +708,30 @@ const UIFactory = (() => {
     };
 
     // Handle finishing a drawing operation
-    const finishDrawing = (ctx, drawingState) => {
+    const finishDrawing = () => {
         ConfigManager.updateSelectorSettings("isActive", false);
-
-        // Clear the canvas
-        // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
         // Process the selected region
         processSelectedRegion();
     };
 
     // Process the selected region for OCR
-    const processSelectedRegion = () => {
+    const processSelectedRegion = (fullScreen = false) => {
         const image = new Image();
         image.src = ConfigManager.getFrameData().dataUrl;
 
         image.onload = () => {
-            const cropData = extractImageRegion(image);
+            let cropData;
+
+            if (fullScreen) {
+                cropData = extractFullScreenRegion();
+            } else {
+                cropData = extractImageRegion(image);
+            }
+
             if (!cropData) return;
 
-            ConfigManager.updateFrameData({
+            ConfigManager.updateExtractedImageData({
                 dataUrl: cropData.dataUrl,
                 currentTime: VideoManager.getCurrentTime(),
                 timestamp: Date.now(),
@@ -728,9 +741,6 @@ const UIFactory = (() => {
 
             // Download image
             // downloadImage(cropData.dataUrl);
-
-            // Send to OCR service
-            // sendToOCR(cropData.dataUrl);
         };
     };
 
@@ -755,27 +765,17 @@ const UIFactory = (() => {
 
     // Extract rectangle region
     const extractRectangleRegion = (image, cropCanvas, cropCtx) => {
-        const width =
-            Math.abs(
-                ConfigManager.getCurrentSelectorSettings().path[1]?.x -
-                    ConfigManager.getCurrentSelectorSettings().startX
-            ) ||
-            Math.abs(
-                ConfigManager.getCurrentSelectorSettings().startX -
-                    (ConfigManager.getCurrentSelectorSettings().path[1]?.x ||
-                        ConfigManager.getCurrentSelectorSettings().startX)
-            );
+        const { startX, startY, path } = ConfigManager.getCurrentSelectorSettings();
+        const endX = path[1]?.x ?? startX;
+        const endY = path[1]?.y ?? startY;
 
-        const height =
-            Math.abs(
-                ConfigManager.getCurrentSelectorSettings().path[1]?.y -
-                    ConfigManager.getCurrentSelectorSettings().startY
-            ) ||
-            Math.abs(
-                ConfigManager.getCurrentSelectorSettings().startY -
-                    (ConfigManager.getCurrentSelectorSettings().path[1]?.y ||
-                        ConfigManager.getCurrentSelectorSettings().startY)
-            );
+        // Calculate width and height (absolute values)
+        const width = Math.abs(endX - startX);
+        const height = Math.abs(endY - startY);
+
+        // Calculate the top-left corner coordinates
+        const x = Math.min(startX, endX);
+        const y = Math.min(startY, endY);
 
         // Skip if selection is too small
         if (width < 5 || height < 5) return null;
@@ -785,8 +785,8 @@ const UIFactory = (() => {
 
         cropCtx.drawImage(
             image,
-            ConfigManager.getCurrentSelectorSettings().startX,
-            ConfigManager.getCurrentSelectorSettings().startY,
+            x,
+            y,
             width,
             height,
             0,
@@ -839,39 +839,146 @@ const UIFactory = (() => {
         };
     };
 
-    // Send image to OCR service
-    const sendToOCR = (dataUrl) => {
-        chrome.runtime.sendMessage(
-            {
-                type: "ocr-request",
-                image: dataUrl,
-            },
-            (response) => {
-                if (response && response.success) {
-                    displayOCRResult(response.text);
-                } else {
-                    displayOCRResult("OCR processing failed. Please try again.");
-                }
-            }
-        );
+    // Extract full screen region
+    const extractFullScreenRegion = () => {
+        return {
+            dataUrl: ConfigManager.getFrameData().dataUrl,
+        };
     };
 
     const createResultsCanvas = () => {
+        const canvasParent = document.createElement("div");
+        canvasParent.id = "vidscript-slider-content-left-results-canvas-wrapper";
+        canvasParent.style.position = "relative";
+
         const canvas = document.createElement("img");
         canvas.id = "vidscript-results-image";
-        canvas.src = ConfigManager.getFrameData().dataUrl;
+        canvas.src = ConfigManager.getExtractedImageData().dataUrl;
+        canvasParent.appendChild(canvas);
 
-        return canvas;
+        return canvasParent;
     };
 
     // Display OCR result
-    const displayOCRResult = (text) => {
-        if (text && text.trim().length > 0) {
-            // You could replace this with a modal instead of an alert
-            alert("OCR text:\n\n" + text);
-        } else {
-            alert("No text detected in the selected area.");
+    const drawResultsOnCanvas = async () => {
+        const canvasParent = document.querySelector(
+            "#vidscript-slider-content-left-results-canvas-wrapper"
+        );
+        const canvas = document.querySelector("#vidscript-results-image");
+        const textOverlay = ConfigManager.getExtractedImageData().textOverlay;
+
+        if (!canvasParent || !canvas || !textOverlay) {
+            return;
         }
+
+        // Wait for the image to load if it's not already loaded
+        if (!canvas.complete || canvas.naturalWidth === 0) {
+            await new Promise((resolve) => {
+                canvas.onload = resolve;
+                // In case the image is already loaded but the event didn't fire
+                if (canvas.complete) resolve();
+            });
+        }
+
+        // Debug logging
+        console.log("Canvas parent:", canvasParent);
+        console.log("Canvas:", canvas);
+        console.log("Extracted data:", textOverlay);
+
+        // Remove existing overlay if it exists
+        const existingOverlay = document.querySelector("#vidscript-results-overlay-canvas");
+        if (existingOverlay) {
+            canvasParent.removeChild(existingOverlay);
+        }
+
+        // Create overlay canvas
+        const overlayCanvas = document.createElement("canvas");
+        overlayCanvas.id = "vidscript-results-overlay-canvas";
+
+        // Set canvas dimensions to match the image
+        overlayCanvas.width = canvas.naturalWidth || canvas.width;
+        overlayCanvas.height = canvas.naturalHeight || canvas.height;
+
+        canvasParent.appendChild(overlayCanvas);
+
+        // Get context
+        const ctx = overlayCanvas.getContext("2d");
+        if (!ctx) {
+            console.error("Failed to get canvas context");
+            return;
+        }
+
+        // Clear canvas
+        ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+        // Draw each word at its position
+        textOverlay.Lines.forEach((line) => {
+            line.Words.forEach((word) => {
+                try {
+                    const x = word.Left;
+                    const y = word.Top;
+                    const width = word.Width;
+                    const height = word.Height;
+
+                    // Draw bounding box with blur effect
+                    ctx.save();
+
+                    // Create a clipping region for the blur effect
+                    ctx.beginPath();
+                    ctx.rect(x, y, width, height);
+                    ctx.clip();
+
+                    // Apply blur effect to the background
+                    ctx.filter = "blur(5px)";
+                    // Draw a slightly larger rectangle for the blur to spread
+                    const padding = 10;
+                    ctx.drawImage(
+                        canvas,
+                        Math.max(0, x - padding),
+                        Math.max(0, y - padding),
+                        Math.min(canvas.width, width + padding * 2),
+                        Math.min(canvas.height, height + padding * 2),
+                        x - padding,
+                        y - padding,
+                        width + padding * 2,
+                        height + padding * 2
+                    );
+
+                    // Reset filter and draw a semi-transparent overlay
+                    ctx.filter = "none";
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+                    ctx.fillRect(x, y, width, height);
+                    ctx.restore();
+
+                    // Set text styling
+                    const fontSize = height;
+                    ctx.font = `${fontSize}px Arial`;
+                    ctx.fillStyle = "white";
+                    ctx.textBaseline = "top";
+
+                    // Draw the word
+                    const measured = ctx.measureText(word.WordText);
+                    const scaleX = width / measured.width;
+
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.scale(scaleX, 1);
+                    ctx.fillText(word.WordText, 0, 0);
+                    ctx.restore();
+                } catch (error) {
+                    console.error(`Error drawing word: ${error.message}`);
+                }
+            });
+        });
+    };
+
+    const addResultsToTextArea = () => {
+        const textArea = document.querySelector("#vidscript-slider-content-left-results-textarea");
+        if (!textArea) {
+            return;
+        }
+
+        textArea.value = ConfigManager.getExtractedImageData().text;
     };
 
     return {
@@ -883,6 +990,8 @@ const UIFactory = (() => {
         resizeVideoOverlay,
         removeVideoOverlay,
         createResultsCanvas,
+        drawResultsOnCanvas,
+        addResultsToTextArea,
     };
 })();
 
