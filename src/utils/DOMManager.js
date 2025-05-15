@@ -6,7 +6,7 @@ import EventManager from "./EventManager.js";
 import ChatService from "./ChatService.js";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
-import hljs from 'highlight.js';
+import hljs from "highlight.js";
 
 // Module for DOM operations
 const DOMManager = (() => {
@@ -710,6 +710,18 @@ const DOMManager = (() => {
         const textArea = document.createElement("textarea");
         textArea.id = "vidscript-slider-chat-textarea";
         textArea.placeholder = "Write your text here...";
+        textArea.addEventListener("keydown", (e) => {
+            // When user presses enter only
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+
+                const btn = document.querySelector("#vidscript-slider-chat-send-btn");
+
+                // Send text to LLM
+                btn.click();
+            }
+        });
+
         sliderContentRightResults.appendChild(textArea);
 
         // send button
@@ -746,11 +758,23 @@ const DOMManager = (() => {
         return sendBtn;
     };
 
+    const createSliderChatMessageContainer = (type = "user") => {
+        const messageContainer = document.createElement("div");
+        messageContainer.className = `vidscript-slider-chat-message-container vidscript-slider-chat-message-${type}-container`;
+        return messageContainer;
+    };
+
     const addSliderChatLoadingState = () => {
-        const messageContainer = createSliderChatMessageContainer("ai");
+        const messageContainer = createSliderChatMessageContainer("loading");
+
+        const loadingHeader = document.createElement("div");
+        loadingHeader.id = "vidscript-slider-chat-message-header";
+        loadingHeader.textContent = "Thinking...";
+        messageContainer.appendChild(loadingHeader);
 
         const loadingState = document.createElement("div");
         loadingState.id = "vidscript-slider-chat-loader";
+        messageContainer.appendChild(loadingState);
 
         const loadingAnimation = document.createElement("div");
         loadingAnimation.id = "vidscript-slider-chat-loader-animation";
@@ -758,17 +782,12 @@ const DOMManager = (() => {
 
         const chat = document.querySelector("#vidscript-slider-chat-container");
         chat.appendChild(messageContainer);
-        messageContainer.appendChild(loadingState);
-    };
-
-    const createSliderChatMessageContainer = (type = "user") => {
-        const messageContainer = document.createElement("div");
-        messageContainer.className = `vidscript-slider-chat-message-container vidscript-slider-chat-message-${type}-container`;
-        return messageContainer;
     };
 
     const removeSliderChatLoadingState = () => {
-        const loadingState = document.querySelector("#vidscript-slider-chat-loader");
+        const loadingState = document.querySelector(
+            ".vidscript-slider-chat-message-loading-container"
+        );
         if (loadingState) {
             loadingState.remove();
         }
@@ -779,25 +798,28 @@ const DOMManager = (() => {
             gfm: true,
             breaks: true,
             highlight(code, language) {
-                console.log("Highlighting code with language:", language);
                 try {
-                    // Check if language exists
                     if (language && hljs.getLanguage(language)) {
-                        console.log("Language found, highlighting...");
                         return hljs.highlight(code, { language }).value;
                     } else {
-                        console.log("Language not found, using autodetect");
                         return hljs.highlightAuto(code).value;
                     }
                 } catch (error) {
-                    console.error("Highlight error:", error);
-                    return code; // Return original code if highlight fails
+                    return code;
                 }
             },
         });
 
         const html = marked.parse(message);
         const messageContainer = createSliderChatMessageContainer(type);
+
+        const messageHeader = document.createElement("div");
+        messageHeader.className = "vidscript-slider-chat-message-header";
+        messageHeader.textContent =
+            type === "user"
+                ? "You . " + new Date().toLocaleString()
+                : "Assistant . " + new Date().toLocaleString();
+        messageContainer.appendChild(messageHeader);
 
         const messageElement = document.createElement("div");
         messageElement.className = `vidscript-slider-chat-message vidscript-slider-chat-message-${type}`;
@@ -807,6 +829,19 @@ const DOMManager = (() => {
 
         const chat = document.querySelector("#vidscript-slider-chat-container");
         chat.appendChild(messageContainer);
+
+        // Make the chat scroll to the latest user's message
+        if (type === "ai") {
+            // get last user message
+            const userMessages = document.querySelectorAll(".vidscript-slider-chat-message-user-container");
+            const lastUserMessage = userMessages[userMessages.length - 1];
+
+            if (lastUserMessage) {
+                lastUserMessage.scrollIntoView({ behavior: "smooth" });
+            }
+        } else {
+            messageContainer.scrollIntoView({ behavior: "smooth" });
+        }
     };
 
     const resetSlider = () => {
