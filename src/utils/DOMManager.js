@@ -768,7 +768,7 @@ const DOMManager = (() => {
         const messageContainer = createSliderChatMessageContainer("loading");
 
         const loadingHeader = document.createElement("div");
-        loadingHeader.id = "vidscript-slider-chat-message-header";
+        loadingHeader.className = "vidscript-slider-chat-message-header";
         loadingHeader.textContent = "Thinking...";
         messageContainer.appendChild(loadingHeader);
 

@@ -438,13 +438,19 @@
 /* Result Slider Overlay :: Start */
 #vidscript-results-overlay {
     position: fixed;
+    opacity: 0;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(4px);
     z-index: 100000;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.1s ease;
+    transition: transform 0.5s ease;
     opacity: 0;
     pointer-events: none;
+    -webkit-transition: transform 0.5s ease;
+    -moz-transition: transform 0.5s ease;
+    -ms-transition: transform 0.5s ease;
+    -o-transition: transform 0.5s ease;
 }
 
 #vidscript-results-overlay.active {
@@ -458,12 +464,12 @@
 /* Result Slider :: Start */
 #vidscript-slider {
     position: fixed;
-    display: none;
+    display: flex;
+    opacity: 0;
     flex-direction: column;
     gap: 1.5rem;
     left: 50%;
     bottom: 0;
-    transform: translateX(-50%) translateY(100%);
     width: 95vw;
     height: 90vh;
     background-color: white;
@@ -474,8 +480,18 @@
     border-radius: 20px 20px 0 0;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     padding: 0 1.5rem;
-    transition: transform 0.3s ease-in-out;
     overflow: hidden;
+    transition: transform 0.5s ease-in-out;
+    transition: opacity 0.1s ease-in-out;
+    transform: translateX(-50%) translateY(100%);
+    -webkit-transform: translateX(-50%) translateY(100%);
+    -moz-transform: translateX(-50%) translateY(100%);
+    -ms-transform: translateX(-50%) translateY(100%);
+    -o-transform: translateX(-50%) translateY(100%);
+    -webkit-transition: transform 0.5s ease-in-out;
+    -moz-transition: transform 0.5s ease-in-out;
+    -ms-transition: transform 0.5s ease-in-out;
+    -o-transition: transform 0.5s ease-in-out;
 }
 
 #vidscript-slider * {
@@ -488,12 +504,12 @@
 }
 
 #vidscript-slider.active {
-    display: flex;
     transform: translateX(-50%) translateY(0);
     -webkit-transform: translateX(-50%) translateY(0);
     -moz-transform: translateX(-50%) translateY(0);
     -ms-transform: translateX(-50%) translateY(0);
     -o-transform: translateX(-50%) translateY(0);
+    opacity: 1;
 }
 
 /* Slider Header :: Start */
