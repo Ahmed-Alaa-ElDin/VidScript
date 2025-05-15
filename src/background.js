@@ -1,5 +1,5 @@
-const OCR_API_KEY = "K84343132688957";
-const COHERE_API_KEY = "a5uYux91bedScFI4mXlGV27DodhULlLugV12affa";
+const cohereKey = import.meta.env.VITE_COHERE_KEY;
+const ocrKey = import.meta.env.VITE_OCR_SPACE_KEY;
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "ocr-space-request" && message.image) {
@@ -12,7 +12,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         fetch("https://api.ocr.space/parse/image", {
             method: "POST",
             headers: {
-                apikey: OCR_API_KEY,
+                apikey: ocrKey,
             },
             body: formData,
         })
@@ -42,7 +42,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         fetch("https://api.cohere.ai/v2/chat", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${COHERE_API_KEY}`,
+                "Authorization": `Bearer ${cohereKey}`,
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
