@@ -1,5 +1,6 @@
 const cohereKey = import.meta.env.VITE_COHERE_KEY;
 const ocrKey = import.meta.env.VITE_OCR_SPACE_KEY;
+const youtubeApiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "ocr-space-request" && message.image) {
@@ -36,8 +37,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true; // Keeps the channel open for async response
     }
 
-    if (message.type === "send-llm-request" && message.text) {
-        console.log("Cohere Request:", message.text);
+    if (message.type === "send-llm-request" && message.prompt) {
+        console.log("Cohere Request:", message.prompt);
         
         fetch("https://api.cohere.ai/v2/chat", {
             method: "POST",
@@ -47,16 +48,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             },
             body: JSON.stringify({
                 model: "command-a-03-2025",
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are a helpful assistant.",
-                    },
-                    {
-                        role: "user",
-                        content: message.text,
-                    },
-                ],
+                messages: message.prompt,
             }),
         })
             .then(response => response.json())
@@ -71,6 +63,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             })
             .catch(error => {
                 console.error("Cohere Error:", error);
+                sendResponse({ success: false, error: error.message });
+            });
+
+        return true;
+    }
+
+    if (message.type === "get-video-context" && message.videoId) {
+        fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${message.videoId}&key=${youtubeApiKey}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("YouTube Video Context:", data);
+                sendResponse({ success: true, result: data });
+            })
+            .catch(error => {
+                console.error("YouTube Error:", error);
                 sendResponse({ success: false, error: error.message });
             });
 

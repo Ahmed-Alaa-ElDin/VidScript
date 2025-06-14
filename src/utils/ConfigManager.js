@@ -5,9 +5,27 @@ const ConfigManager = (() => {
     const states = ["OFF", "READY", "EXTRACTING", "DONE"];
     const selectorStates = ["rectangle", "freehand"];
     const extractionModes = ["image", "text"];
+    const languages = [
+        { code: "ar", name: "Arabic" },
+        { code: "en", name: "English" },
+        { code: "fr", name: "French" },
+        { code: "de", name: "German" },
+        { code: "es", name: "Spanish" },
+        { code: "it", name: "Italian" },
+        { code: "ja", name: "Japanese" },
+        { code: "ko", name: "Korean" },
+        { code: "pt", name: "Portuguese" },
+        { code: "ru", name: "Russian" },
+        { code: "zh", name: "Chinese" },
+    ];
 
     // Core configuration with defaults
     const config = {
+        context: {
+            videoContext: null,
+            chatContext: null,
+        },
+
         // Default settings that can be overridden by user
         settings: {
             showBoundingBoxes: false,
@@ -67,6 +85,8 @@ const ConfigManager = (() => {
         },
 
         getAll: () => config,
+
+        getLanguages: () => languages,
 
         update: (path, value) => {
             const keys = path.split(".");
@@ -145,8 +165,11 @@ const ConfigManager = (() => {
                     case "OFF":
                         EventManager.emit("remove-overlay");
                         EventManager.emit("toggle-vidscript", false);
+                        ConfigManager.resetSettings();
+                        ConfigManager.resetChatContext();
                         break;
                     case "READY":
+                        EventManager.emit("get-video-context");
                         EventManager.emit("add-overlay");
                         EventManager.emit("toggle-vidscript", true);
                         EventManager.emit("hide-results");
@@ -221,6 +244,17 @@ const ConfigManager = (() => {
             }
 
             return config.selectorSettings;
+        },
+
+        resetContext: () => {
+            config.context = {
+                videoContext: null,
+                chatContext: null,
+            };
+        },
+
+        resetChatContext: () => {
+            config.context.chatContext = null;
         },
 
         resetSettings: () => {

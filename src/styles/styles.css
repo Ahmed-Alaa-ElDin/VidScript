@@ -534,7 +534,8 @@
     gap: 0.5rem;
 }
 
-#vidscript-close-slider-btn {
+#vidscript-close-slider-btn,
+#vidscript-close-translation-lang-selector-popup-btn {
     padding: 0.5rem;
     border-radius: 9999px;
     background-color: #ff4f4f;
@@ -547,7 +548,8 @@
     color: #fff;
 }
 
-#vidscript-close-slider-btn:hover {
+#vidscript-close-slider-btn:hover,
+#vidscript-close-translation-lang-selector-popup-btn:hover {
     background-color: #ff2f2f;
 }
 /* Slider Header :: End */
@@ -910,12 +912,121 @@
     margin: 10px 0;
 }
 
-.vidscript-slider-chat-message pre>code {
+.vidscript-slider-chat-message pre > code {
     padding: 10px;
     border-radius: 8px;
 }
 /* Slider Content Right Results :: End */
 /* Slider Content :: End */
+
+/* Translation Lang Selector Popup :: Start */
+#vidscript-translation-lang-selector-overlay {
+    position: fixed;
+    display: none;
+    opacity: 0;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 100001;
+    transition: opacity 0.1s ease;
+    transition: transform 0.5s ease;
+    pointer-events: none;
+    -webkit-transition: transform 0.5s ease;
+    -moz-transition: transform 0.5s ease;
+    -ms-transition: transform 0.5s ease;
+    -o-transition: transform 0.5s ease;
+}
+
+#vidscript-translation-lang-selector-overlay.active {
+    display: flex;
+    opacity: 1;
+    pointer-events: auto;
+    cursor: pointer;
+    transform: translateX(0) translateY(0);
+    -webkit-transform: translateX(0) translateY(0);
+    -moz-transform: translateX(0) translateY(0);
+    -ms-transform: translateX(0) translateY(0);
+    -o-transform: translateX(0) translateY(0);
+}
+
+#vidscript-translation-lang-selector-popup {
+    position: fixed;
+    display: none;
+    flex-direction: column;
+    opacity: 0;
+    gap: 1.5rem;
+    left: 50%;
+    top: 50%;
+    width: 30vw;
+    transform: translateX(-50%) translateY(-50%);
+    background-color: white;
+    z-index: 100002;
+    border-width: 3px;
+    border-style: solid;
+    border-color: #ff4f4f;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    padding: 1.5rem;
+    overflow: hidden;
+    transition: transform 0.5s ease-in-out;
+    transition: opacity 0.1s ease-in-out;
+    transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    -moz-transform: translateX(-50%) translateY(-50%);
+    -ms-transform: translateX(-50%) translateY(-50%);
+    -o-transform: translateX(-50%) translateY(-50%);
+    -webkit-transition: opacity 0.1s ease-in-out;
+    -moz-transition: opacity 0.1s ease-in-out;
+    -ms-transition: opacity 0.1s ease-in-out;
+    -o-transition: opacity 0.1s ease-in-out;
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
+    -ms-border-radius: 20px;
+    -o-border-radius: 20px;
+}
+
+#vidscript-translation-lang-selector-popup.active {
+    display: flex;
+    opacity: 1;
+}
+
+#vidscript-translation-lang-selector-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+#vidscript-translation-lang-selector-popup-header-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #574a4a;
+}
+
+#vidscript-translation-lang-selector-popup-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#vidscript-translation-lang-selector-popup-content-btn {
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #ff4f4f;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#vidscript-translation-lang-selector-popup-content-btn:hover {
+    background: #ff2f2f;
+}
+/* Translation Lang Selector Popup :: End */
 
 /* Animation :: Start */
 @keyframes l6 {

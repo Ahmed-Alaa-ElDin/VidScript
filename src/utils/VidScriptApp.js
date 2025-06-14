@@ -40,6 +40,9 @@ const VidScriptApp = (() => {
             // Insert results slider
             DOMManager.insertResultsSlider();
 
+            // Insert translation lang selector popup
+            DOMManager.insertTranslationLangSelectorPopup();
+
             console.log("✅ VidScript initialized successfully");
         } catch (error) {
             console.error("❌ VidScript initialization error:", error);
@@ -107,6 +110,11 @@ const VidScriptApp = (() => {
             ConfigManager.updateState("OFF");
         });
 
+        // Video seek event
+        EventManager.on("video-seeked", () => {
+            ConfigManager.updateState("OFF");
+        });
+
         // toggle vidscript button
         EventManager.on("toggle-vidscript", (state) => {
             const toggler = document.querySelector("#vidscript-toggle");
@@ -122,7 +130,6 @@ const VidScriptApp = (() => {
             } else {
                 toggler.classList.remove("checked");
                 button.classList.remove("checked");
-                ConfigManager.resetSettings();
             }
         });
 
@@ -192,6 +199,34 @@ const VidScriptApp = (() => {
 
         EventManager.on("send-llm-request", (text) => {
             chrome.runtime.sendMessage({ type: "send-llm-request", text });
+        });
+
+        EventManager.on("get-video-context", () => {
+            console.log("get-video-context");
+            console.log(ConfigManager.get("context.videoContext"));
+
+            // Check if video has context generated before
+            if (ConfigManager.get("context.videoContext") === null) {
+                VideoManager.getVideoContext();
+            }
+        });
+
+        EventManager.on("show-translation-lang-selector-popup", () => {
+            const translationLangSelectorOverlay = document.querySelector("#vidscript-translation-lang-selector-overlay");
+            const translationLangSelectorPopup = document.querySelector("#vidscript-translation-lang-selector-popup");
+            if (translationLangSelectorOverlay && translationLangSelectorPopup) {
+                translationLangSelectorOverlay.classList.add("active");
+                translationLangSelectorPopup.classList.add("active");
+            }
+        });
+
+        EventManager.on("hide-translation-lang-selector-popup", () => {
+            const translationLangSelectorOverlay = document.querySelector("#vidscript-translation-lang-selector-overlay");
+            const translationLangSelectorPopup = document.querySelector("#vidscript-translation-lang-selector-popup");
+            if (translationLangSelectorOverlay && translationLangSelectorPopup) {
+                translationLangSelectorOverlay.classList.remove("active");
+                translationLangSelectorPopup.classList.remove("active");
+            }
         });
 
         // // Video paused event

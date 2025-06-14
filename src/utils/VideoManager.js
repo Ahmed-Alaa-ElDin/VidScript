@@ -1,12 +1,10 @@
 import EventManager from "./EventManager.js";
-import NotificationManager from "./NotificationManager.js";
 import ConfigManager from "./ConfigManager.js";
+import ChatService from "./ChatService.js";
 
 const VideoManager = (() => {
     // Get YouTube video ID
     const getVideoId = () => {
-        // Try multiple methods to get video ID
-
         // Method 1: URL parameter
         const urlParams = new URLSearchParams(window.location.search);
         const videoId = urlParams.get("v");
@@ -18,53 +16,28 @@ const VideoManager = (() => {
             return pathname.substring(8);
         }
 
-        // Method 3: Meta tags
-        const ogUrlMeta = document.querySelector('meta[property="og:url"]');
-        if (ogUrlMeta) {
-            try {
-                const url = new URL(ogUrlMeta.content);
-                const urlId = new URLSearchParams(url.search).get("v");
-                if (urlId) return urlId;
-            } catch (e) {
-                console.error("Error parsing og:url:", e);
-            }
-        }
-
-        // Method 4: Video element data
-        const videoElement = document.querySelector("video");
-        if (videoElement && videoElement.src) {
-            const matches = videoElement.src.match(/\/([a-zA-Z0-9_-]{11})\//);
-            if (matches && matches[1]) return matches[1];
-        }
-
         return null;
     };
 
     // Get YouTube video title
-    const getVideoTitle = () => {
-        // Try multiple methods to get video title
+    const getVideoInfo = () => {
+        const videoId = getVideoId();
 
-        // Method 1: Title element in DOM
-        const titleElement =
-            document.querySelector("h1.ytd-watch-metadata yt-formatted-string") ||
-            document.querySelector("h1 .ytd-watch-metadata");
-        if (titleElement && titleElement.textContent) {
-            return titleElement.textContent.trim();
-        }
+        if (!videoId) return null;
 
-        // Method 2: Meta tags
-        const ogTitleMeta = document.querySelector('meta[property="og:title"]');
-        if (ogTitleMeta && ogTitleMeta.content) {
-            return ogTitleMeta.content.trim();
-        }
-
-        // Method 3: Document title (fallback)
-        if (document.title && document.title !== "YouTube") {
-            // Remove " - YouTube" suffix if present
-            return document.title.replace(/ - YouTube$/, "").trim();
-        }
-
-        return "Untitled Video";
+        return new Promise((resolve, reject) => {
+            // Send the message to the background script
+            chrome.runtime.sendMessage({ type: "get-video-context", videoId }, (response) => {
+                if (response && response.success) {
+                    if (response.result.items.length === 0) {
+                        reject("Video not found");
+                    }
+                    resolve(response.result.items[0]);
+                } else {
+                    reject(response.error);
+                }
+            });
+        });
     };
 
     // Get current video time
@@ -172,9 +145,26 @@ const VideoManager = (() => {
         return true;
     };
 
+    const getVideoContext = async () => {
+        const videoInfo = await getVideoInfo();
+        const videoTitle = videoInfo.snippet.title;
+        const videoDescription = videoInfo.snippet.description;
+
+        const response = await ChatService.generateVideoContext(
+            videoTitle,
+            videoDescription,
+        );
+
+        if (response.success) {
+            ConfigManager.update("context.videoContext", response.result);
+        }
+
+        return response;
+    };
+
     return {
         getVideoId,
-        getVideoTitle,
+        getVideoInfo,
         getCurrentTime,
         formatTime,
         captureCurrentFrame,
@@ -182,6 +172,7 @@ const VideoManager = (() => {
         playVideo,
         isVideoPlaying,
         setupVideoEvents,
+        getVideoContext,
     };
 })();
 

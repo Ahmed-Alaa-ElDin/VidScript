@@ -52,11 +52,12 @@
         }
     ],
     "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://api.ocr.space https://api.cohere.ai"
+        "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://api.ocr.space https://api.cohere.ai https://www.googleapis.com"
     },
     "host_permissions": [
         "https://www.youtube.com/*",
         "https://api.ocr.space/*",
-        "https://api.cohere.ai/*"
+        "https://api.cohere.ai/*",
+        "https://www.googleapis.com/youtube/v3/*"
     ]
 }

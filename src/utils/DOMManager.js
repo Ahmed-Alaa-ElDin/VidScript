@@ -52,6 +52,9 @@ const DOMManager = (() => {
         // Set up event listeners
         setupButtonEvents(button, menu);
 
+        // Set up video events once button is added
+        VideoManager.setupVideoEvents();
+
         return true;
     };
 
@@ -125,9 +128,6 @@ const DOMManager = (() => {
                     if (insertButton()) {
                         console.log("✅ VidScript button added via observer");
                         buttonObserver.disconnect();
-
-                        // Set up video events once button is added
-                        VideoManager.setupVideoEvents();
                         break;
                     }
                 }
@@ -172,6 +172,10 @@ const DOMManager = (() => {
                 console.log("🔄 YouTube navigation detected");
                 lastUrl = currentUrl;
 
+                // reset settings
+                ConfigManager.updateState("OFF");
+                ConfigManager.resetContext();
+
                 // Small delay to let YouTube UI update
                 setTimeout(() => {
                     if (!document.querySelector("#vidscript-wrapper")) {
@@ -181,9 +185,6 @@ const DOMManager = (() => {
                             // If failed, set up observer
                             setupButtonObserver();
                         }
-
-                        // Set up video events
-                        VideoManager.setupVideoEvents();
                     }
                 }, 1000);
             } else {
@@ -666,6 +667,11 @@ const DOMManager = (() => {
         </div>
         <span class="btn-text">Improve</span>
         `;
+
+        improveBtn.addEventListener("click", () => {
+            ChatService.improveVideoORCResults();
+        });
+
         return improveBtn;
     };
 
@@ -680,8 +686,97 @@ const DOMManager = (() => {
         </div>
         <span class="btn-text">Translate</span>
         `;
+
+        translateBtn.addEventListener("click", () => {
+            EventManager.emit("show-translation-lang-selector-popup");
+        });
+
         return translateBtn;
     };
+
+    // Translation Lang Selector Popup :: Start
+    const insertTranslationLangSelectorPopup = () => {
+        const overlay = createTranslationLangSelectorOverlay();
+        const popup = createTranslationLangSelectorPopup();
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(popup);
+    };
+
+    const createTranslationLangSelectorOverlay = () => {
+        const overlay = document.createElement("div");
+        overlay.id = "vidscript-translation-lang-selector-overlay";
+
+        overlay.addEventListener("click", () => {
+            EventManager.emit("hide-translation-lang-selector-popup");
+        });
+
+        return overlay;
+    };
+
+    const createTranslationLangSelectorPopup = () => {
+        const popup = document.createElement("div");
+        popup.id = "vidscript-translation-lang-selector-popup";
+
+        const popupHeader = createTranslationLangSelectorPopupHeader();
+        popup.appendChild(popupHeader);
+
+        const popupContent = createTranslationLangSelectorPopupContent();
+        popup.appendChild(popupContent);
+
+        return popup;
+    };
+
+    const createTranslationLangSelectorPopupHeader = () => {
+        const header = document.createElement("div");
+        header.id = "vidscript-translation-lang-selector-popup-header";
+
+        // title
+        const title = document.createElement("h3");
+        title.id = "vidscript-translation-lang-selector-popup-header-title";
+        title.textContent = "Select Language";
+        header.appendChild(title);
+
+        // close button
+        const closeBtn = document.createElement("div");
+        closeBtn.id = "vidscript-close-translation-lang-selector-popup-btn";
+        closeBtn.ariaLabel = "Close translation lang selector popup";
+        closeBtn.innerHTML =
+            "<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path fill='currentColor' d='M16.95 8.464a1 1 0 0 0-1.414-1.414L12 10.586L8.464 7.05A1 1 0 1 0 7.05 8.464L10.586 12L7.05 15.536a1 1 0 1 0 1.414 1.414L12 13.414l3.536 3.536a1 1 0 1 0 1.414-1.414L13.414 12z'/></svg>";
+        header.appendChild(closeBtn);
+
+        closeBtn.addEventListener("click", () => {
+            EventManager.emit("hide-translation-lang-selector-popup");
+        });
+
+        return header;
+    };
+
+    const createTranslationLangSelectorPopupContent = () => {
+        const content = document.createElement("div");
+        content.id = "vidscript-translation-lang-selector-popup-content";
+
+        for (let lang of ConfigManager.getLanguages()) {
+            const contentBtn = createLanguageButton(lang.name);
+            content.appendChild(contentBtn);
+        }
+
+        return content;
+    };
+
+    const createLanguageButton = (lang) => {
+        const btn = document.createElement("div");
+        btn.id = "vidscript-translation-lang-selector-popup-content-btn";
+        btn.textContent = lang;
+
+        btn.addEventListener("click", () => {
+            EventManager.emit("hide-translation-lang-selector-popup");
+            ChatService.translateVideoOCRResults(lang);
+        });
+
+        return btn;
+    };
+    // Translation Lang Selector Popup :: End
 
     const createExplainBtn = () => {
         const explainBtn = document.createElement("button");
@@ -694,6 +789,11 @@ const DOMManager = (() => {
         </div>
         <span class="btn-text">Explain</span>
         `;
+
+        explainBtn.addEventListener("click", () => {
+            ChatService.explainVideoOCRResultsForBeginners();
+        });
+
         return explainBtn;
     };
 
@@ -720,6 +820,11 @@ const DOMManager = (() => {
                 // Send text to LLM
                 btn.click();
             }
+
+            // detect direction
+            const direction = detectDirection(textArea.value);
+            textArea.style.direction = direction;
+            textArea.style.textAlign = direction === "rtl" ? "right" : "left";
         });
 
         sliderContentRightResults.appendChild(textArea);
@@ -782,6 +887,9 @@ const DOMManager = (() => {
 
         const chat = document.querySelector("#vidscript-slider-chat-container");
         chat.appendChild(messageContainer);
+
+        // Make the chat scroll to the latest message
+        chat.scrollTop = chat.scrollHeight;
     };
 
     const removeSliderChatLoadingState = () => {
@@ -830,10 +938,16 @@ const DOMManager = (() => {
         const chat = document.querySelector("#vidscript-slider-chat-container");
         chat.appendChild(messageContainer);
 
+        const direction = detectDirection(message);
+        messageElement.style.direction = direction;
+        messageElement.style.textAlign = direction === "rtl" ? "right" : "left";
+
         // Make the chat scroll to the latest user's message
         if (type === "ai") {
             // get last user message
-            const userMessages = document.querySelectorAll(".vidscript-slider-chat-message-user-container");
+            const userMessages = document.querySelectorAll(
+                ".vidscript-slider-chat-message-user-container"
+            );
             const lastUserMessage = userMessages[userMessages.length - 1];
 
             if (lastUserMessage) {
@@ -878,6 +992,18 @@ const DOMManager = (() => {
         }
     };
 
+    const detectDirection = (text) => {
+        const strongLtr = /[A-Za-z]/;
+        const strongRtl = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+
+        for (const char of text) {
+            if (strongRtl.test(char)) return "rtl";
+            if (strongLtr.test(char)) return "ltr";
+        }
+
+        return "ltr";
+    };
+
     return {
         insertButton,
         setupButtonObserver,
@@ -889,6 +1015,7 @@ const DOMManager = (() => {
         cleanup,
         createResultsSlider,
         insertResultsSlider,
+        insertTranslationLangSelectorPopup,
         resetSlider,
         addSliderChatLoadingState,
         removeSliderChatLoadingState,
