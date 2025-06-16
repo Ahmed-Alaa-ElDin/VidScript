@@ -32,7 +32,11 @@ const VideoManager = (() => {
                     if (response.result.items.length === 0) {
                         reject("Video not found");
                     }
-                    resolve(response.result.items[0]);
+                    resolve({
+                        videoId: videoId,
+                        videoTitle: response.result.items[0].snippet.title,
+                        videoDescription: response.result.items[0].snippet.description,
+                    });
                 } else {
                     reject(response.error);
                 }
@@ -147,8 +151,16 @@ const VideoManager = (() => {
 
     const getVideoContext = async () => {
         const videoInfo = await getVideoInfo();
-        const videoTitle = videoInfo.snippet.title;
-        const videoDescription = videoInfo.snippet.description;
+        
+        if (!videoInfo) return null;
+        
+        const videoId = videoInfo.videoId;
+        const videoTitle = videoInfo.videoTitle;
+        const videoDescription = videoInfo.videoDescription;
+
+        ConfigManager.update("context.videoId", videoId);
+        ConfigManager.update("context.videoTitle", videoTitle);
+        ConfigManager.update("context.videoDescription", videoDescription);
 
         const response = await ChatService.generateVideoContext(
             videoTitle,

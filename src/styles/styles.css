@@ -535,7 +535,7 @@
 }
 
 #vidscript-close-slider-btn,
-#vidscript-close-translation-lang-selector-popup-btn {
+.vidscript-popup-header-close-btn {
     padding: 0.5rem;
     border-radius: 9999px;
     background-color: #ff4f4f;
@@ -549,7 +549,7 @@
 }
 
 #vidscript-close-slider-btn:hover,
-#vidscript-close-translation-lang-selector-popup-btn:hover {
+.vidscript-popup-header-close-btn:hover {
     background-color: #ff2f2f;
 }
 /* Slider Header :: End */
@@ -920,7 +920,7 @@
 /* Slider Content :: End */
 
 /* Translation Lang Selector Popup :: Start */
-#vidscript-translation-lang-selector-overlay {
+.vidscript-backdrop {
     position: fixed;
     display: none;
     opacity: 0;
@@ -937,7 +937,7 @@
     -o-transition: transform 0.5s ease;
 }
 
-#vidscript-translation-lang-selector-overlay.active {
+.vidscript-backdrop.active {
     display: flex;
     opacity: 1;
     pointer-events: auto;
@@ -949,7 +949,7 @@
     -o-transform: translateX(0) translateY(0);
 }
 
-#vidscript-translation-lang-selector-popup {
+.vidscript-popup {
     position: fixed;
     display: none;
     flex-direction: column;
@@ -985,12 +985,12 @@
     -o-border-radius: 20px;
 }
 
-#vidscript-translation-lang-selector-popup.active {
+.vidscript-popup.active {
     display: flex;
     opacity: 1;
 }
 
-#vidscript-translation-lang-selector-popup-header {
+.vidscript-popup-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -998,7 +998,7 @@
     margin-bottom: 20px;
 }
 
-#vidscript-translation-lang-selector-popup-header-title {
+.vidscript-popup-header-title {
     font-size: 20px;
     font-weight: bold;
     color: #574a4a;
@@ -1027,6 +1027,103 @@
     background: #ff2f2f;
 }
 /* Translation Lang Selector Popup :: End */
+
+/* Platform Select Popup :: Start */
+#vidscript-platform-select-popup-body-textarea-wrapper{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#vidscript-platform-select-popup-body-textarea-label{
+    font-size: 14px;
+    font-weight: bold;
+    color: #574a4a;
+}
+
+#vidscript-platform-select-popup-body-textarea{
+    height: 100%;
+    border: 2px solid #ff4f4f;
+    border-radius: 8px;
+    padding: 10px;
+    resize: vertical;
+    overflow: auto;
+    font-size: 14px;
+    font-weight: bold;
+    color: #574a4a;
+}
+
+#vidscript-platform-select-popup-body-textarea:focus,
+#vidscript-platform-select-popup-body-textarea:focus-visible,
+#vidscript-platform-select-popup-body-textarea:focus-within {
+    border: 2px solid #ff4f4f !important;
+}
+
+#vidscript-platform-select-popup-body-platforms-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+.vidscript-popup-body-platform-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 5px 12px 5px 5px;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    -webkit-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    -moz-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    -ms-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    -o-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: background 0.3s ease;
+    -webkit-transition: background 0.3s ease;
+    -moz-transition: background 0.3s ease;
+    -ms-transition: background 0.3s ease;
+    -o-transition: background 0.3s ease;
+    -webkit-border-radius: 9999px;
+    -moz-border-radius: 9999px;
+    -ms-border-radius: 9999px;
+    -o-border-radius: 9999px;
+}
+
+.vidscript-popup-body-platform-btn .icon-circle {
+    width: 15px;
+    height: 15px;
+    background: #fff;
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    padding: 7px;
+}
+
+.vidscript-popup-body-platform-btn .icon-circle svg {
+    width: 100%;
+    height: 100%;
+}
+
+.vidscript-popup-body-platform-btn .btn-text {
+    font-weight: bold;
+    font-size: 14px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.vidscript-popup-body-hr {
+    border: none;
+    height: 2px;
+    width: 100%;
+    margin: 10px 0;
+    background-color: #ff2f2f;
+}
+/* Platform Select Popup :: End */
 
 /* Animation :: Start */
 @keyframes l6 {

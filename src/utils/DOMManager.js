@@ -4,6 +4,7 @@ import UIFactory from "./UIFactory.js";
 import VideoManager from "./VideoManager.js";
 import EventManager from "./EventManager.js";
 import ChatService from "./ChatService.js";
+import TextExtractor from "./TextExtractor.js";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
@@ -448,6 +449,11 @@ const DOMManager = (() => {
         textArea.placeholder = "Results will appear here...";
         sliderContentLeftResults.appendChild(textArea);
 
+        textArea.addEventListener("input", () => {
+            ConfigManager.updateExtractedImageData({ text: textArea.value });
+            console.log(ConfigManager.get("extractedImageData"));
+        });
+
         return sliderContentLeftResults;
     };
 
@@ -576,6 +582,12 @@ const DOMManager = (() => {
         `;
 
         copyResultsBtn.addEventListener("click", () => {
+            TextExtractor.copyOcrText();
+            if (!ConfigManager.getExtractedImageData().text) {
+                NotificationManager.show("No text to copy!", "error");
+                return;
+            }
+            
             const text = ConfigManager.getExtractedImageData().text;
             navigator.clipboard.writeText(text);
             NotificationManager.show("Text copied to clipboard!", "success");
@@ -609,8 +621,149 @@ const DOMManager = (() => {
         </div>
         <span class="btn-text">Share</span>
         `;
+
+        shareResultsBtn.addEventListener("click", () => {
+            EventManager.emit("show-platform-select-popup");
+        });
+
         return shareResultsBtn;
     };
+
+    // create platform select popup :: start
+    const insertPlatformSelectPopup = () => {
+        const overlay = createPlatformSelectOverlay();
+        const popup = createPlatformSelectPopup();
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(popup);
+    };
+
+    const createPlatformSelectOverlay = () => {
+        const overlay = document.createElement("div");
+        overlay.id = "vidscript-platform-select-overlay";
+        overlay.className = "vidscript-backdrop";
+
+        overlay.addEventListener("click", () => {
+            EventManager.emit("hide-platform-select-popup");
+        });
+
+        return overlay;
+    };
+
+    const createPlatformSelectPopup = () => {
+        const popup = document.createElement("div");
+        popup.id = "vidscript-platform-select-popup";
+        popup.className = "vidscript-popup";
+
+        const header = createPlatformSelectPopupHeader();
+        popup.appendChild(header);
+
+        const body = createPlatformSelectPopupBody();
+        popup.appendChild(body);
+
+        return popup;
+    };
+
+    const createPlatformSelectPopupHeader = () => {
+        const header = document.createElement("div");
+        header.id = "vidscript-platform-select-popup-header";
+        header.className = "vidscript-popup-header";
+
+        const headerTitle = document.createElement("h3");
+        headerTitle.id = "vidscript-platform-select-popup-header-title";
+        headerTitle.className = "vidscript-popup-header-title";
+        headerTitle.textContent = "Select Platform";
+        header.appendChild(headerTitle);
+
+        const headerCloseBtn = document.createElement("div");
+        headerCloseBtn.id = "vidscript-close-platform-select-popup-btn";
+        headerCloseBtn.className = "vidscript-popup-header-close-btn";
+        headerCloseBtn.ariaLabel = "Close platform select popup";
+        headerCloseBtn.innerHTML =
+            "\u003csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'\u003e\u003cpath fill='currentColor' d='M16.95 8.464a1 1 0 0 0-1.414-1.414L12 10.586L8.464 7.05A1 1 0 1 0 7.05 8.464L10.586 12L7.05 15.536a1 1 0 1 0 1.414 1.414L12 13.414l3.536 3.536a1 1 0 1 0 1.414-1.414L13.414 12z'/\u003e\u003c/svg\u003e";
+        header.appendChild(headerCloseBtn);
+
+        headerCloseBtn.addEventListener("click", () => {
+            EventManager.emit("hide-platform-select-popup");
+        });
+
+        return header;
+    };
+
+    const createPlatformSelectPopupBody = () => {
+        const body = document.createElement("div");
+        body.id = "vidscript-platform-select-popup-body";
+
+        const textArea = createPlatformSelectPopupBodyTextArea();
+        body.appendChild(textArea);
+
+        const hr = document.createElement("hr");
+        hr.className = "vidscript-popup-body-hr"; 
+        body.appendChild(hr);
+
+        const platforms = createPlatformSelectPopupBodyPlatforms();
+        body.appendChild(platforms);
+
+        return body;
+    };
+
+    const createPlatformSelectPopupBodyTextArea = () => {
+        const textAreaWrapper = document.createElement("div");
+        textAreaWrapper.id = "vidscript-platform-select-popup-body-textarea-wrapper";
+
+        // create text area label
+        const textAreaLabel = document.createElement("label");
+        textAreaLabel.id = "vidscript-platform-select-popup-body-textarea-label"; 
+        textAreaLabel.textContent = "Post Text";
+        textAreaLabel.htmlFor = "vidscript-platform-select-popup-body-textarea";
+        textAreaWrapper.appendChild(textAreaLabel);
+
+        // create text area
+        const textArea = document.createElement("textarea");
+        textArea.id = "vidscript-platform-select-popup-body-textarea";
+        textArea.placeholder = "Enter text";
+        textArea.rows = 4;
+        textAreaWrapper.appendChild(textArea);
+
+        return textAreaWrapper;
+    };
+
+    const createPlatformSelectPopupBodyPlatforms = () => {
+        const platformsWrapper = document.createElement("div");
+        platformsWrapper.id = "vidscript-platform-select-popup-body-platforms-wrapper";
+        platformsWrapper.className = "vidscript-popup-body-platforms-wrapper";
+
+        const platforms = ConfigManager.getPlatforms();
+        platforms.forEach((platform) => {
+            const platformWrapper = document.createElement("div");
+            platformWrapper.id = `vidscript-platform-select-popup-body-platform-${platform.code}`;
+            platformWrapper.className = "vidscript-popup-body-platform-btn"; 
+            platformWrapper.style.backgroundColor = platform.color;
+            platformWrapper.style.color = platform.textColor;
+            platformWrapper.addEventListener("mouseenter", () => {
+                platformWrapper.style.backgroundColor = platform.colorHover;
+            });
+            platformWrapper.addEventListener("mouseleave", () => {
+                platformWrapper.style.backgroundColor = platform.color;
+            });
+            platformWrapper.ariaLabel = `Platform: ${platform.name}`;
+            platformWrapper.innerHTML = /*html*/ `
+            <div class="icon-circle" style="color: ${platform.color}">
+                ${platform.icon}
+            </div>
+            <span class="btn-text" style="color: ${platform.textColor}">${platform.name}</span>
+            `;
+
+            platformWrapper.addEventListener("click", () => {
+                platform.clickFunction();
+            });
+
+            platformsWrapper.appendChild(platformWrapper);
+        });
+
+        return platformsWrapper;
+    };
+    // create platform select popup :: end
 
     const createSliderContentRight = () => {
         const sliderContentRight = document.createElement("div");
@@ -706,6 +859,7 @@ const DOMManager = (() => {
     const createTranslationLangSelectorOverlay = () => {
         const overlay = document.createElement("div");
         overlay.id = "vidscript-translation-lang-selector-overlay";
+        overlay.className = "vidscript-backdrop";
 
         overlay.addEventListener("click", () => {
             EventManager.emit("hide-translation-lang-selector-popup");
@@ -717,6 +871,7 @@ const DOMManager = (() => {
     const createTranslationLangSelectorPopup = () => {
         const popup = document.createElement("div");
         popup.id = "vidscript-translation-lang-selector-popup";
+        popup.className = "vidscript-popup";
 
         const popupHeader = createTranslationLangSelectorPopupHeader();
         popup.appendChild(popupHeader);
@@ -730,16 +885,19 @@ const DOMManager = (() => {
     const createTranslationLangSelectorPopupHeader = () => {
         const header = document.createElement("div");
         header.id = "vidscript-translation-lang-selector-popup-header";
+        header.className = "vidscript-popup-header";
 
         // title
         const title = document.createElement("h3");
         title.id = "vidscript-translation-lang-selector-popup-header-title";
+        title.className = "vidscript-popup-header-title";
         title.textContent = "Select Language";
         header.appendChild(title);
 
         // close button
         const closeBtn = document.createElement("div");
         closeBtn.id = "vidscript-close-translation-lang-selector-popup-btn";
+        closeBtn.className = "vidscript-popup-header-close-btn";
         closeBtn.ariaLabel = "Close translation lang selector popup";
         closeBtn.innerHTML =
             "<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path fill='currentColor' d='M16.95 8.464a1 1 0 0 0-1.414-1.414L12 10.586L8.464 7.05A1 1 0 1 0 7.05 8.464L10.586 12L7.05 15.536a1 1 0 1 0 1.414 1.414L12 13.414l3.536 3.536a1 1 0 1 0 1.414-1.414L13.414 12z'/></svg>";
@@ -822,7 +980,7 @@ const DOMManager = (() => {
             }
 
             // detect direction
-            const direction = detectDirection(textArea.value);
+            const direction = detectTextDirection(textArea.value);
             textArea.style.direction = direction;
             textArea.style.textAlign = direction === "rtl" ? "right" : "left";
         });
@@ -938,7 +1096,7 @@ const DOMManager = (() => {
         const chat = document.querySelector("#vidscript-slider-chat-container");
         chat.appendChild(messageContainer);
 
-        const direction = detectDirection(message);
+        const direction = detectTextDirection(message);
         messageElement.style.direction = direction;
         messageElement.style.textAlign = direction === "rtl" ? "right" : "left";
 
@@ -992,7 +1150,7 @@ const DOMManager = (() => {
         }
     };
 
-    const detectDirection = (text) => {
+    const detectTextDirection = (text) => {
         const strongLtr = /[A-Za-z]/;
         const strongRtl = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
 
@@ -1015,6 +1173,7 @@ const DOMManager = (() => {
         cleanup,
         createResultsSlider,
         insertResultsSlider,
+        insertPlatformSelectPopup,
         insertTranslationLangSelectorPopup,
         resetSlider,
         addSliderChatLoadingState,

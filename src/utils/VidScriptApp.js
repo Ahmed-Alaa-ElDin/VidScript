@@ -43,6 +43,9 @@ const VidScriptApp = (() => {
             // Insert translation lang selector popup
             DOMManager.insertTranslationLangSelectorPopup();
 
+            // Insert platform select popup
+            DOMManager.insertPlatformSelectPopup();
+
             console.log("✅ VidScript initialized successfully");
         } catch (error) {
             console.error("❌ VidScript initialization error:", error);
@@ -226,6 +229,29 @@ const VidScriptApp = (() => {
             if (translationLangSelectorOverlay && translationLangSelectorPopup) {
                 translationLangSelectorOverlay.classList.remove("active");
                 translationLangSelectorPopup.classList.remove("active");
+            }
+        });
+
+        EventManager.on("show-platform-select-popup", () => {
+            const platformSelectOverlay = document.querySelector("#vidscript-platform-select-overlay");
+            const platformSelectPopup = document.querySelector("#vidscript-platform-select-popup");
+            const platformSelectTextArea = document.querySelector("#vidscript-platform-select-popup-body-textarea");
+
+            const sharingText = TextExtractor.prepareSharingText();
+            platformSelectTextArea.value = sharingText;
+
+            if (platformSelectOverlay && platformSelectPopup) {
+                platformSelectOverlay.classList.add("active");
+                platformSelectPopup.classList.add("active");
+            }
+        });
+
+        EventManager.on("hide-platform-select-popup", () => {
+            const platformSelectOverlay = document.querySelector("#vidscript-platform-select-overlay");
+            const platformSelectPopup = document.querySelector("#vidscript-platform-select-popup");
+            if (platformSelectOverlay && platformSelectPopup) {
+                platformSelectOverlay.classList.remove("active");
+                platformSelectPopup.classList.remove("active");
             }
         });
 
