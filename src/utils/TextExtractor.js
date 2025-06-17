@@ -53,7 +53,7 @@ const TextExtractor = (() => {
         let timestamp = VideoManager.formatTime(currentTime);
         let videoLink = `https://youtube.com/watch?v=${videoId}&t=${currentTimeInSeconds}s`;
 
-        let sharingText = `From "${videoTitle}"\n🕒 ${timestamp}\n${videoLink} \n${text}`;
+        let sharingText = `From "${videoTitle}" → ${videoLink} \n🕒 ${timestamp} \n"${text}"`;
 
         return sharingText;
     };
@@ -75,8 +75,8 @@ const TextExtractor = (() => {
             "#vidscript-platform-select-popup-body-textarea"
         );
 
-        if (length) {
-            return sharingTextArea.value.slice(0, length - 3) + "...";
+        if (length && length < sharingTextArea.value.length) {
+            return sharingTextArea.value.slice(0, length - 3) + "...\"";
         }
 
         return sharingTextArea.value;

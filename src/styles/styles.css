@@ -996,6 +996,7 @@
     justify-content: space-between;
     gap: 30px;
     margin-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .vidscript-popup-header-title {
