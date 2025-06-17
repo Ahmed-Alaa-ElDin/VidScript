@@ -70,7 +70,7 @@ const TextExtractor = (() => {
         NotificationManager.show("Text copied to clipboard!", "success");
     };
 
-    const getSharingText = (length = null) => {
+    const getSharingText = (length = null) => { 
         const sharingTextArea = document.querySelector(
             "#vidscript-platform-select-popup-body-textarea"
         );
