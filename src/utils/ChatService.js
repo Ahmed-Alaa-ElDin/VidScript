@@ -5,7 +5,8 @@ import ConfigManager from "./ConfigManager.js";
 const ChatService = (() => {
     const sendMessage = (text) => {
         // Get the latest chat context
-        const chatContext = ConfigManager.get("context.chatContext");
+        const chatContext = ConfigManager.get("extractedImageData.chatContext");
+        const videoContext = ConfigManager.get("context.videoContext");
         
         // Add the user message to the chat
         DOMManager.addSliderChatMessage(text, "user");
@@ -16,8 +17,8 @@ const ChatService = (() => {
         const prompt = [
             {
                 role: "system",
-                content: chatContext
-                    ? `You are a helpful assistant. Here is the conversation so far:\n\n${chatContext}`
+                content: chatContext || videoContext
+                    ? `You are a helpful assistant. Here is the conversation so far:\n\n${chatContext}\n\nThe video context is:\n\n${videoContext}`
                     : "You are a helpful assistant.",
             },
             {
@@ -25,6 +26,8 @@ const ChatService = (() => {
                 content: text,
             },
         ];
+
+        console.log("Prompt:", prompt);
 
         // Send the message to the background script
         chrome.runtime.sendMessage({ type: "send-llm-request", prompt }, (response) => {
@@ -70,7 +73,7 @@ const ChatService = (() => {
     };
 
     const updateChatContext = async (lastRequest, lastResponse) => {
-        const oldChatContext = ConfigManager.get("context.chatContext");
+        const oldChatContext = ConfigManager.get("extractedImageData.chatContext");
 
         const prompt = [
             {
@@ -90,7 +93,7 @@ const ChatService = (() => {
         chrome.runtime.sendMessage({ type: "send-llm-request", prompt }, (response) => {
             console.log("Updated Chat Context Response:", response);
             if (response && response.success) {
-                ConfigManager.update("context.chatContext", response.result);
+                ConfigManager.update("extractedImageData.chatContext", response.result);
             } else {
                 console.error("Failed to update chat context:", response.error);
             }

@@ -1,14 +1,199 @@
 body {
     font-family: sans-serif;
-    padding: 10px;
-    width: 200px;
+    width: 350px;
+    box-sizing: border-box;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
 }
 
-button {
-    width: 100%;
+#vidscript-popup-header {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    margin-bottom: 10px;
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#vidscript-popup-title {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+#vidscript-popup-header-results-count {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: bold;
+    background-color: #ff4f4f;
+    color: #f8fafc;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 0.15s;
+}
+
+#vidscript-popup-header-results-count:hover {
+    background-color: #ff2f2f;
+}
+
+#vidscript-popup-body {
+    overflow-y: auto;
+    max-height: 420px;
+    margin-bottom: 10px;
+}
+
+#vidscript-popup-body-results {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    list-style: none;
+    margin: 0;
+    padding: 1rem;
+}
+
+.vidscript-popup-body-results-item-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: #574a4a;
+}
+
+.vidscript-popup-body-results-item-image {
+    width: 75px;
+    height: 75px;
+    object-fit: contain;
+    background-color: #fff;
+    border-radius: .25rem;
+    overflow: hidden;
+    border: 1px solid #f3f4f6;
+    -webkit-border-radius: .25rem;
+    -moz-border-radius: .25rem;
+    -ms-border-radius: .25rem;
+    -o-border-radius: .25rem;
+}
+
+.vidscript-popup-body-results-item-content {
     padding: 10px;
-    background: #e50914;
-    color: white;
-    border: none;
+    border: 2px solid #fca5a5;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, transform 0.05s;
+    -webkit-border-radius: 0.5rem;
+    -moz-border-radius: 0.5rem;
+    -ms-border-radius: 0.5rem;
+    -o-border-radius: 0.5rem;
+}
+
+.vidscript-popup-body-results-item-content:hover {
+    border-color: #ff4f4f;
+}
+
+.vidscript-popup-body-results-item-content:active {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.vidscript-popup-body-results-item-empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #574a4a;
+}
+
+.vidscript-popup-body-results-item-info {
+    flex-grow: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+}
+
+.vidscript-popup-body-results-item-description {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 5px;
+}
+
+.vidscript-popup-body-results-item-info .vidscript-popup-body-results-item-description div {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.vidscript-popup-body-results-item-info svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    vertical-align: middle;
+}
+
+.vidscript-popup-body-results-item-delete svg {
+    cursor: pointer;
+    color: #ff4f4f;
+    width: 1rem;
+    height: 1rem;
+    pointer-events: none;
+}
+
+.vidscript-popup-body-results-item-text {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#vidscript-popup-body-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+}
+
+#vidscript-popup-body-clear-results {
+    color: #ff4f4f;
+    background-color: #fff;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ff4f4f;
     border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, transform 0.05s;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+    -o-border-radius: 5px;
+    -webkit-transition: background-color 0.2s, color 0.2s, transform 0.05s;
+    -moz-transition: background-color 0.2s, color 0.2s, transform 0.05s;
+    -ms-transition: background-color 0.2s, color 0.2s, transform 0.05s;
+    -o-transition: background-color 0.2s, color 0.2s, transform 0.05s;
+}
+
+#vidscript-popup-body-clear-results:hover {
+    background-color: #ff4f4f;
+    color: #fff;
+}
+
+#vidscript-popup-body-clear-results svg {
+    width: 18px;
+    height: 18px;
+}
+
+#vidscript-popup-body-clear-results:active {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }

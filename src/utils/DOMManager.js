@@ -607,6 +607,11 @@ const DOMManager = (() => {
         </div>
         <span class="btn-text">Save</span>
         `;
+
+        saveResultsBtn.addEventListener("click", () => {
+            ConfigManager.addCurrentResultsToLocalStore();
+        });
+
         return saveResultsBtn;
     };
 
@@ -1114,6 +1119,20 @@ const DOMManager = (() => {
         } else {
             messageContainer.scrollIntoView({ behavior: "smooth" });
         }
+
+        // update chat context
+        ConfigManager.updateExtractedImageData({
+            chat: [
+                ...ConfigManager.getExtractedImageData().chat,
+                {
+                    role: type,
+                    content: message,
+                    timestamp: new Date().toISOString(),
+                },
+            ],
+        });
+
+        console.log(ConfigManager.getExtractedImageData());
     };
 
     const resetSlider = () => {

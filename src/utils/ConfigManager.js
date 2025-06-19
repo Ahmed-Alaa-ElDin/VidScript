@@ -1,5 +1,6 @@
 import EventManager from "./EventManager.js";
 import TextExtractor from "./TextExtractor.js";
+import NotificationManager from "./NotificationManager.js";
 
 // Module for configuration settings
 const ConfigManager = (() => {
@@ -45,7 +46,7 @@ const ConfigManager = (() => {
             icon: "<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path fill='currentColor' d='M4.75 1.875a2.125 2.125 0 1 0 0 4.25a2.125 2.125 0 0 0 0-4.25m-2 6A.125.125 0 0 0 2.625 8v13c0 .069.056.125.125.125h4A.125.125 0 0 0 6.875 21V8a.125.125 0 0 0-.125-.125zm6.5 0A.125.125 0 0 0 9.125 8v13c0 .069.056.125.125.125h4a.125.125 0 0 0 .125-.125v-7a1.875 1.875 0 1 1 3.75 0v7c0 .069.056.125.125.125h4a.125.125 0 0 0 .125-.125v-8.62c0-2.427-2.11-4.325-4.525-4.106a7.2 7.2 0 0 0-2.169.548l-1.306.56V8a.125.125 0 0 0-.125-.125z'/></svg>",
             color: "#0a66c2",
             textColor: "#fff",
-            colorHover: "#08529b",  
+            colorHover: "#08529b",
             clickFunction: TextExtractor.shareToLinkedIn,
         },
         {
@@ -84,7 +85,6 @@ const ConfigManager = (() => {
             videoTitle: null,
             videoDescription: null,
             videoContext: null,
-            chatContext: null,
         },
 
         // Default settings that can be overridden by user
@@ -125,6 +125,8 @@ const ConfigManager = (() => {
             timestamp: null,
             text: null,
             textOverlay: null,
+            chat: [],
+            chatContext: null,
         },
 
         // Current selector settings
@@ -198,6 +200,8 @@ const ConfigManager = (() => {
                 timestamp: null,
                 text: null,
                 textOverlay: null,
+                chat: [],
+                chatContext: null,
             };
         },
 
@@ -229,7 +233,6 @@ const ConfigManager = (() => {
                         EventManager.emit("remove-overlay");
                         EventManager.emit("toggle-vidscript", false);
                         ConfigManager.resetSettings();
-                        ConfigManager.resetChatContext();
                         break;
                     case "READY":
                         EventManager.emit("get-video-context");
@@ -309,18 +312,67 @@ const ConfigManager = (() => {
             return config.selectorSettings;
         },
 
+        addCurrentResultsToLocalStore: async () => {
+            const { context, extractedImageData } = config;
+
+            if (!extractedImageData.text && !extractedImageData.chat.length) {
+                NotificationManager.show("No text data found in extractedImageData", "error");
+                return;
+            }
+
+            const { videoId, videoTitle, videoDescription, videoContext } = context;
+            const { currentTime, timestamp } = extractedImageData;
+
+            if (!videoId || !currentTime) {
+                NotificationManager.show("Missing required videoId or timestamp", "error");
+                return;
+            }
+
+            try {
+                // Get existing results from localStorage
+                const savedResults = await ConfigManager.getSavedResults();
+
+                // Initialize video entry if it doesn't exist
+                if (!savedResults[videoId]) {
+                    savedResults[videoId] = {
+                        videoTitle,
+                        videoDescription,
+                        videoContext,
+                        results: {},
+                    };
+                }
+
+                // Find existing result by timestamp or create new one
+                savedResults[videoId].results[currentTime] = extractedImageData;
+
+                // Save updated results to localStorage
+                chrome.storage.local.set({ "vidscript_results": savedResults });
+
+                NotificationManager.show("Results saved successfully", "success");
+            } catch (error) {
+                console.error("Error adding results to local storage:", error);
+                NotificationManager.show("Error adding results to local storage", "error");
+            }
+        },
+
+        // Helper function to get saved results
+        getSavedResults: async () => {
+            try {
+                const saved = await chrome.storage.local.get("vidscript_results");
+                return saved.vidscript_results ?? {};
+            } catch (error) {
+                console.error("Error parsing saved results:", error);
+                return {};
+            }
+        },
+
         resetContext: () => {
             config.context = {
                 videoId: null,
                 videoTitle: null,
                 videoDescription: null,
                 videoContext: null,
-                chatContext: null,
             };
-        },
-
-        resetChatContext: () => {
-            config.context.chatContext = null;
         },
 
         resetSettings: () => {
@@ -335,8 +387,18 @@ const ConfigManager = (() => {
             };
 
             config.frameData = {
-                mode: "image",
                 canvas: null,
+                dataUrl: null,
+                width: null,
+                height: null,
+                top: null,
+                left: null,
+                currentTime: null,
+                timestamp: null,
+            };
+
+            config.extractedImageData = {
+                mode: "image",
                 dataUrl: null,
                 width: null,
                 height: null,
@@ -346,6 +408,8 @@ const ConfigManager = (() => {
                 timestamp: null,
                 text: null,
                 textOverlay: null,
+                chat: [],
+                chatContext: null,
             };
 
             config.selectorSettings = {
