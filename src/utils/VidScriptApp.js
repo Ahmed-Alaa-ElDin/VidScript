@@ -11,8 +11,6 @@ import UIFactory from "./UIFactory.js";
 const VidScriptApp = (() => {
     // Initialize the app
     const init = () => {
-        console.log("🚀 VidScript initializing...");
-
         try {
             // Load saved settings
             ConfigManager.loadSavedSettings();
@@ -22,7 +20,6 @@ const VidScriptApp = (() => {
 
             // Try to insert button immediately
             if (DOMManager.insertButton()) {
-                console.log("✅ VidScript button added immediately");
             } else {
                 // If immediate insertion fails, set up observer
                 DOMManager.setupButtonObserver();
@@ -45,8 +42,6 @@ const VidScriptApp = (() => {
 
             // Insert platform select popup
             DOMManager.insertPlatformSelectPopup();
-
-            console.log("✅ VidScript initialized successfully");
         } catch (error) {
             console.error("❌ VidScript initialization error:", error);
         }
@@ -56,8 +51,6 @@ const VidScriptApp = (() => {
     const setupEventHandlers = () => {
         // Set up state change event
         EventManager.on("add-overlay", async () => {
-            console.log("🎬 Adding overlay...");
-
             // Add overlay
             try {
                 // Pause video
@@ -75,8 +68,6 @@ const VidScriptApp = (() => {
 
         // Resize overlay
         EventManager.on("resize-overlay", async () => {
-            console.log("🎬 Resizing overlay...");
-
             // Resize overlay
             try {
                 // Pause video
@@ -94,8 +85,6 @@ const VidScriptApp = (() => {
 
         // Remove overlay
         EventManager.on("remove-overlay", async () => {
-            console.log("🎬 Removing overlay...");
-
             // Remove overlay
             try {
                 UIFactory.removeVideoOverlay();
@@ -300,8 +289,6 @@ const VidScriptApp = (() => {
 
     // Unload/cleanup the app
     const unload = () => {
-        console.log("🛑 VidScript unloading...");
-
         // Clean up DOM observers
         DOMManager.cleanup();
 
@@ -323,8 +310,6 @@ const VidScriptApp = (() => {
                 element.parentNode.removeChild(element);
             }
         });
-
-        console.log("✅ VidScript unloaded successfully");
     };
 
     return {

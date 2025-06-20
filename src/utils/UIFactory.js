@@ -333,7 +333,6 @@ const UIFactory = (() => {
             e.stopPropagation();
         });
 
-        console.log("✅ Overlay is gradually revealed with magic effect");
         return true;
     };
 
@@ -434,17 +433,6 @@ const UIFactory = (() => {
             }
         }
 
-        console.log(
-            "🔄 Video overlay resized to",
-            frameData.width,
-            "x",
-            frameData.height,
-            "with scale factors:",
-            scaleX.toFixed(2),
-            "x",
-            scaleY.toFixed(2)
-        );
-
         return overlay;
     };
 
@@ -458,7 +446,6 @@ const UIFactory = (() => {
         if (sparkle) sparkle.remove();
         if (borderOverlay) borderOverlay.remove();
 
-        console.log("✅ Overlay is gradually hidden with magic effect");
         return true;
     };
 
@@ -519,8 +506,6 @@ const UIFactory = (() => {
                 currentMode === "rectangle"
                     ? '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3a2 2 0 0 0-2 2m16-2a2 2 0 0 1 2 2m0 14a2 2 0 0 1-2 2M5 21a2 2 0 0 1-2-2M9 3h1M9 21h1m4-18h1m-1 18h1M3 9v1m18-1v1M3 14v1m18-1v1"/></svg>'
                     : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="currentColor" d="M8.162 2.212a8 8 0 0 1 3.676 0a.75.75 0 0 1-.344 1.46a6.5 6.5 0 0 0-2.988 0a.75.75 0 0 1-.344-1.46M6.825 3.437a.75.75 0 0 1-.242 1.033A6.54 6.54 0 0 0 4.47 6.583a.75.75 0 0 1-1.275-.79a8.04 8.04 0 0 1 2.598-2.598a.75.75 0 0 1 1.032.242m6.35 0a.75.75 0 0 1 1.032-.242a8.04 8.04 0 0 1 2.598 2.598a.75.75 0 0 1-1.275.79a6.54 6.54 0 0 0-2.112-2.113a.75.75 0 0 1-.243-1.033M3.114 7.604a.75.75 0 0 1 .558.902a6.5 6.5 0 0 0 0 2.988a.75.75 0 0 1-1.46.344a8 8 0 0 1 0-3.676a.75.75 0 0 1 .902-.558m13.772 0a.75.75 0 0 1 .902.558a8 8 0 0 1 0 3.676a.75.75 0 0 1-1.46-.344a6.5 6.5 0 0 0 0-2.988a.75.75 0 0 1 .558-.902m-13.449 5.57a.75.75 0 0 1 1.033.244a6.54 6.54 0 0 0 2.113 2.112a.75.75 0 1 1-.79 1.275a8.04 8.04 0 0 1-2.598-2.598a.75.75 0 0 1 .242-1.032m13.673 1.262a.75.75 0 0 0-1.22-.872l-.003.004l-.017.022l-.074.097a10.3 10.3 0 0 1-1.33 1.376c-1.018-.73-2.34-1.313-3.966-1.313c-.752 0-1.388.244-1.84.677A2.17 2.17 0 0 0 7.987 16c0 .571.224 1.144.671 1.573c.453.433 1.088.677 1.841.677c1.532 0 2.868-.584 3.915-1.274l.055.054a8.4 8.4 0 0 1 1.285 1.67l.06.108l.012.024l.002.003c-.152-.266 0 .002 0 .002a.75.75 0 0 0 1.342-.672l-.001-.002v-.001l-.003-.005l-.007-.012l-.022-.043l-.08-.146a10 10 0 0 0-1.445-1.903a12 12 0 0 0 1.362-1.44q.063-.078.097-.125l.026-.036l.008-.01l.003-.004zm-6.61.814c1.027 0 1.91.304 2.65.743c-.784.443-1.683.757-2.65.757c-.422 0-.668-.131-.803-.26a.67.67 0 0 1-.21-.49c0-.179.07-.356.21-.49c.135-.129.38-.26.803-.26"/></svg>';
-
-            console.log(`🖱️ Switched to: ${currentMode} mode`);
         });
 
         fullScreenSelector.addEventListener("click", (e) => {

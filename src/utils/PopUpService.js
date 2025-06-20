@@ -3,8 +3,6 @@ import NotificationManager from "./NotificationManager.js";
 
 const PopUpService = (() => {
     const addCurrentResultsToLocalStore = async () => {
-        console.log("Saving results... ", ConfigManager.getExtractedImageData());
-        
         const { context, extractedImageData } = ConfigManager.getAll();
 
         if (!extractedImageData.text && !extractedImageData.chat.length) {

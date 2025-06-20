@@ -31,7 +31,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
             })
             .catch((error) => {
-                console.error("OCR Error:", error);
                 sendResponse({ success: false, error: error.message });
             });
 
@@ -39,8 +38,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     if (message.type === "send-llm-request" && message.prompt) {
-        console.log("Cohere Request:", message.prompt);
-        
         fetch("https://api.cohere.ai/v2/chat", {
             method: "POST",
             headers: {
@@ -54,8 +51,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         })
             .then(response => response.json())
             .then(data => {
-                console.log("Cohere Response:", data);
-                
                 if (data.message && data.message.content && data.message.content[0] && data.message.content[0].text) {
                     sendResponse({ success: true, result: data.message.content[0].text });
                 } else {
@@ -63,7 +58,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
             })
             .catch(error => {
-                console.error("Cohere Error:", error);
                 sendResponse({ success: false, error: error.message });
             });
 
@@ -74,11 +68,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${message.videoId}&key=${youtubeApiKey}`)
             .then(response => response.json())
             .then(data => {
-                console.log("YouTube Video Context:", data);
                 sendResponse({ success: true, result: data });
             })
             .catch(error => {
-                console.error("YouTube Error:", error);
                 sendResponse({ success: false, error: error.message });
             });
 

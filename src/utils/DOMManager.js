@@ -128,7 +128,6 @@ const DOMManager = (() => {
             for (const mutation of mutations) {
                 if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
                     if (insertButton()) {
-                        console.log("✅ VidScript button added via observer");
                         buttonObserver.disconnect();
                         break;
                     }
@@ -148,7 +147,6 @@ const DOMManager = (() => {
         setTimeout(() => {
             if (buttonObserver) {
                 buttonObserver.disconnect();
-                console.log("⏱️ VidScript button observer timed out");
             }
         }, 30000);
 
@@ -171,7 +169,6 @@ const DOMManager = (() => {
 
             // If URL changed, try to insert button
             if (currentUrl !== lastUrl) {
-                console.log("🔄 YouTube navigation detected");
                 lastUrl = currentUrl;
 
                 // reset settings
@@ -182,7 +179,6 @@ const DOMManager = (() => {
                 setTimeout(() => {
                     if (!document.querySelector("#vidscript-wrapper")) {
                         if (insertButton()) {
-                            console.log("✅ VidScript button added after navigation");
                         } else {
                             // If failed, set up observer
                             setupButtonObserver();
@@ -193,7 +189,6 @@ const DOMManager = (() => {
                 // Periodic check for button if not present
                 if (!document.querySelector("#vidscript-wrapper")) {
                     if (insertButton()) {
-                        console.log("✅ VidScript button added via interval check");
                     }
                 }
             }
@@ -208,7 +203,6 @@ const DOMManager = (() => {
             const videoContainer = document.querySelector("#movie_player");
 
             if (videoElement && videoContainer) {
-                console.log("🎬 Video found. Initializing resize observer...");
                 setupVideoResizeObserver();
                 observer.disconnect();
             }
@@ -230,14 +224,12 @@ const DOMManager = (() => {
         // Find video element
         const videoElement = document.querySelector("video");
         if (!videoElement) {
-            console.log("⚠️ Video element not found for resize observer");
             return null;
         }
 
         // Find video container
         const videoContainer = document.querySelector("#movie_player");
         if (!videoContainer) {
-            console.log("⚠️ Video container not found for resize observer");
             return null;
         }
 
@@ -264,16 +256,12 @@ const DOMManager = (() => {
                     if (ConfigManager.getCurrentState() !== "OFF") {
                         EventManager.emit("resize-overlay");
                     }
-
-                    console.log(`📏 Video resized: ${newWidth}x${newHeight}`);
-                    console.log(`📏 Video resized: ${ConfigManager.getCurrentState()}`);
                 }
             }
         });
 
         // Start observing the video container
         resizeObserver.observe(videoContainer);
-        console.log("👁️ Video resize observer started");
 
         return resizeObserver;
     };
@@ -538,8 +526,6 @@ const DOMManager = (() => {
                 );
                 canvas.classList.remove("hidden");
             }
-
-            console.log(`🔄 Extraction mode switched to: ${currentMode}`);
 
             // Emit event if EventManager exists
             if (typeof EventManager !== "undefined") {
