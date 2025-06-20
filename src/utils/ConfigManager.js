@@ -153,6 +153,34 @@ const ConfigManager = (() => {
 
         getPlatforms: () => platforms,
 
+        getFrameData: () => {
+            return config.frameData;
+        },
+
+        getExtractedImageData: () => {
+            return config.extractedImageData;
+        },
+
+        getContext: () => {
+            return config.context;
+        },
+
+        getCurrentState: () => {
+            return config.state;
+        },
+
+        getCurrentSelectorMode: () => {
+            return config.selectorSettings.mode;
+        },
+
+        getCurrentSelectorSettings: (key = null) => {
+            if (key) {
+                return config.selectorSettings[key];
+            }
+
+            return config.selectorSettings;
+        },
+
         update: (path, value) => {
             const keys = path.split(".");
             const lastKey = keys.pop();
@@ -170,10 +198,6 @@ const ConfigManager = (() => {
             config.frameData = { ...config.frameData, ...frameData };
         },
 
-        getFrameData: () => {
-            return config.frameData;
-        },
-
         updateExtractedImageData: (imageData) => {
             // Validate mode
             if (imageData.mode && !extractionModes.includes(imageData.mode)) {
@@ -184,25 +208,51 @@ const ConfigManager = (() => {
             config.extractedImageData = { ...config.extractedImageData, ...imageData };
         },
 
-        getExtractedImageData: () => {
-            return config.extractedImageData;
+        updateContext: (context) => {
+            config.context = { ...config.context, ...context };
         },
 
-        resetExtractedImageData: () => {
-            config.extractedImageData = {
-                mode: "image",
-                dataUrl: null,
-                width: null,
-                height: null,
-                top: null,
-                left: null,
-                currentTime: null,
-                timestamp: null,
-                text: null,
-                textOverlay: null,
-                chat: [],
-                chatContext: null,
-            };
+        updateSelectorSettings: (key = null, value) => {
+            switch (key) {
+                case "mode":
+                    if (!selectorStates.includes(value)) {
+                        console.error(`Invalid selector setting: ${value}`);
+                        return false;
+                    }
+                    config.selectorSettings.mode = value;
+                    break;
+                case "isActive":
+                    config.selectorSettings.isActive = value;
+                    break;
+                case "startX":
+                    config.selectorSettings.startX = value;
+                    break;
+                case "startY":
+                    config.selectorSettings.startY = value;
+                    break;
+                case "path":
+                    config.selectorSettings.path = value;
+                    break;
+                case "strokeStyle":
+                    config.selectorSettings.strokeStyle = value;
+                    break;
+                case "lineWidth":
+                    config.selectorSettings.lineWidth = value;
+                    break;
+                case null:
+                    config.selectorSettings = value;
+                    break;
+                default:
+                    config.selectorSettings[key] = value;
+                    break;
+            }
+
+            // Emit selector setting change event
+            if (typeof EventManager !== "undefined") {
+                EventManager.emit("update-selector-settings", config.selectorSettings);
+            }
+
+            return true;
         },
 
         loadSavedSettings: () => {
@@ -253,125 +303,29 @@ const ConfigManager = (() => {
             return true;
         },
 
-        getCurrentState: () => {
-            return config.state;
-        },
-
-        getCurrentSelectorMode: () => {
-            return config.selectorSettings.mode;
-        },
-
-        updateSelectorSettings: (key = null, value) => {
-            switch (key) {
-                case "mode":
-                    if (!selectorStates.includes(value)) {
-                        console.error(`Invalid selector setting: ${value}`);
-                        return false;
-                    }
-                    config.selectorSettings.mode = value;
-                    break;
-                case "isActive":
-                    config.selectorSettings.isActive = value;
-                    break;
-                case "startX":
-                    config.selectorSettings.startX = value;
-                    break;
-                case "startY":
-                    config.selectorSettings.startY = value;
-                    break;
-                case "path":
-                    config.selectorSettings.path = value;
-                    break;
-                case "strokeStyle":
-                    config.selectorSettings.strokeStyle = value;
-                    break;
-                case "lineWidth":
-                    config.selectorSettings.lineWidth = value;
-                    break;
-                case null:
-                    config.selectorSettings = value;
-                    break;
-                default:
-                    config.selectorSettings[key] = value;
-                    break;
-            }
-
-            // Emit selector setting change event
-            if (typeof EventManager !== "undefined") {
-                EventManager.emit("update-selector-settings", config.selectorSettings);
-            }
-
-            return true;
-        },
-
-        getCurrentSelectorSettings: (key = null) => {
-            if (key) {
-                return config.selectorSettings[key];
-            }
-
-            return config.selectorSettings;
-        },
-
-        addCurrentResultsToLocalStore: async () => {
-            const { context, extractedImageData } = config;
-
-            if (!extractedImageData.text && !extractedImageData.chat.length) {
-                NotificationManager.show("No text data found in extractedImageData", "error");
-                return;
-            }
-
-            const { videoId, videoTitle, videoDescription, videoContext } = context;
-            const { currentTime, timestamp } = extractedImageData;
-
-            if (!videoId || !currentTime) {
-                NotificationManager.show("Missing required videoId or timestamp", "error");
-                return;
-            }
-
-            try {
-                // Get existing results from localStorage
-                const savedResults = await ConfigManager.getSavedResults();
-
-                // Initialize video entry if it doesn't exist
-                if (!savedResults[videoId]) {
-                    savedResults[videoId] = {
-                        videoTitle,
-                        videoDescription,
-                        videoContext,
-                        results: {},
-                    };
-                }
-
-                // Find existing result by timestamp or create new one
-                savedResults[videoId].results[currentTime] = extractedImageData;
-
-                // Save updated results to localStorage
-                chrome.storage.local.set({ "vidscript_results": savedResults });
-
-                NotificationManager.show("Results saved successfully", "success");
-            } catch (error) {
-                console.error("Error adding results to local storage:", error);
-                NotificationManager.show("Error adding results to local storage", "error");
-            }
-        },
-
-        // Helper function to get saved results
-        getSavedResults: async () => {
-            try {
-                const saved = await chrome.storage.local.get("vidscript_results");
-                return saved.vidscript_results ?? {};
-            } catch (error) {
-                console.error("Error parsing saved results:", error);
-                return {};
-            }
-        },
-
         resetContext: () => {
             config.context = {
                 videoId: null,
                 videoTitle: null,
                 videoDescription: null,
                 videoContext: null,
+            };
+        },
+
+        resetExtractedImageData: () => {
+            config.extractedImageData = {
+                mode: "image",
+                dataUrl: null,
+                width: null,
+                height: null,
+                top: null,
+                left: null,
+                currentTime: null,
+                timestamp: null,
+                text: null,
+                textOverlay: null,
+                chat: [],
+                chatContext: null,
             };
         },
 

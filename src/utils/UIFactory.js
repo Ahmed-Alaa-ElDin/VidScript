@@ -1,7 +1,7 @@
 import ConfigManager from "./ConfigManager.js";
-import NotificationManager from "./NotificationManager.js";
 import EventManager from "./EventManager.js";
 import VideoManager from "./VideoManager.js";
+import DOMManager from "./DOMManager.js";
 
 // Module for UI operations
 const UIFactory = (() => {
@@ -846,6 +846,7 @@ const UIFactory = (() => {
         };
     };
 
+    // Create results canvas
     const createResultsCanvas = () => {
         const canvasParent = document.createElement("div");
         canvasParent.id = "vidscript-slider-content-left-results-canvas-wrapper";
@@ -857,6 +858,17 @@ const UIFactory = (() => {
         canvasParent.appendChild(canvas);
 
         return canvasParent;
+    };
+
+    // Put the image on the canvas
+    const putImageOnCanvas = () => {
+        const canvasParent = document.querySelector("#vidscript-slider-content-left-results-canvas");
+        if (!canvasParent) {
+            return;
+        }
+
+        const canvas = createResultsCanvas();
+        canvasParent.appendChild(canvas);
     };
 
     // Display OCR result
@@ -879,11 +891,6 @@ const UIFactory = (() => {
                 if (canvas.complete) resolve();
             });
         }
-
-        // Debug logging
-        console.log("Canvas parent:", canvasParent);
-        console.log("Canvas:", canvas);
-        console.log("Extracted data:", textOverlay);
 
         // Remove existing overlay if it exists
         const existingOverlay = document.querySelector("#vidscript-results-overlay-canvas");
@@ -972,6 +979,7 @@ const UIFactory = (() => {
         });
     };
 
+    // Add results to text area
     const addResultsToTextArea = () => {
         const textArea = document.querySelector("#vidscript-slider-content-left-results-textarea");
         if (!textArea) {
@@ -979,6 +987,23 @@ const UIFactory = (() => {
         }
 
         textArea.value = ConfigManager.getExtractedImageData().text;
+    };
+
+    // Load chat
+    const loadChat = () => {
+        const chat = ConfigManager.getExtractedImageData().chat;
+
+        chat.forEach((message) => {
+            DOMManager.addSliderChatMessage(message.content, message.role, new Date(message.timestamp).toLocaleString(), false);
+        });
+    };
+
+    // Render results
+    const renderResults = () => {
+        addResultsToTextArea();
+        putImageOnCanvas();
+        drawResultsOnCanvas();
+        loadChat();
     };
 
     return {
@@ -992,6 +1017,7 @@ const UIFactory = (() => {
         createResultsCanvas,
         drawResultsOnCanvas,
         addResultsToTextArea,
+        renderResults,
     };
 })();
 

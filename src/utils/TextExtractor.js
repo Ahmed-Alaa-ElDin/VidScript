@@ -20,7 +20,6 @@ const TextExtractor = (() => {
                     image: image.dataUrl,
                 },
                 (response) => {
-                    console.log("OCR Response:", response);
                     if (response && response.success) {
                         ConfigManager.updateExtractedImageData({
                             text: response.text,
@@ -45,10 +44,10 @@ const TextExtractor = (() => {
     };
 
     const prepareSharingText = () => {
-        let videoTitle = ConfigManager.get("context.videoTitle");
-        let videoId = ConfigManager.get("context.videoId");
-        let text = ConfigManager.get("extractedImageData.text");
-        let currentTime = ConfigManager.get("extractedImageData.currentTime");
+        let videoTitle = ConfigManager.getContext().videoTitle;
+        let videoId = ConfigManager.getContext().videoId;
+        let text = ConfigManager.getExtractedImageData().text;
+        let currentTime = ConfigManager.getExtractedImageData().currentTime;
         let currentTimeInSeconds = Math.floor(currentTime);
         let timestamp = VideoManager.formatTime(currentTime);
         let videoLink = `https://youtube.com/watch?v=${videoId}&t=${currentTimeInSeconds}s`;

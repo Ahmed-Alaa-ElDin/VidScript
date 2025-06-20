@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await getYouTubeVideoId();
     await loadInitialResults();
     setupStorageListener();
-    setupDeleteListeners();
+    setupClickListeners();
 });
 
 // Helper to extract video ID
@@ -54,10 +54,10 @@ function setupStorageListener() {
     });
 }
 
-function setupDeleteListeners() {
+function setupClickListeners() {
     document.addEventListener("click", (event) => {
-        console.log(event.target);
         if (event.target.classList.contains("vidscript-popup-body-results-item-delete")) {
+            event.stopPropagation();
             deleteResult(event.target.dataset.key);
         }
     });
@@ -68,7 +68,7 @@ function setupDeleteListeners() {
 }
 
 function clearResults() {
-    chrome.storage.local.set({ "vidscript_results": {} });
+    chrome.storage.local.set({ vidscript_results: {} });
     updatePopupUI({ results: {} });
 }
 
@@ -80,13 +80,16 @@ function updatePopupUI(currentResults) {
     const resultsList = document.getElementById("vidscript-popup-body-results");
     resultsList.innerHTML = "";
     if (Object.keys(currentResults.results).length === 0) {
-        resultsList.innerHTML = "<li class='vidscript-popup-body-results-item vidscript-popup-body-results-item-empty'>No results found</li>";
+        resultsList.innerHTML =
+            "<li class='vidscript-popup-body-results-item vidscript-popup-body-results-item-empty'>No results found</li>";
     } else {
         // Sort results by currentTime lowest to highest
-        Object.entries(currentResults.results).sort((a, b) => a[1].currentTime - b[1].currentTime).forEach(([key, value]) => {
-            const li = document.createElement("li");
-            li.className = "vidscript-popup-body-results-item";
-            li.innerHTML = /*html*/ `
+        Object.entries(currentResults.results)
+            .sort((a, b) => a[1].currentTime - b[1].currentTime)
+            .forEach(([key, value]) => {
+                const li = document.createElement("li");
+                li.className = "vidscript-popup-body-results-item";
+                li.innerHTML = /*html*/ `
                 <div class="vidscript-popup-body-results-item-content">
                     <img src="${
                         value.dataUrl
@@ -96,9 +99,9 @@ function updatePopupUI(currentResults) {
                             ${
                                 value.text
                                     ? `<div>
-                                <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 18H3M17 6H3m18 6H3"/></svg></span>
-                                <span class="vidscript-popup-body-results-item-text">${value.text}</span>
-                            </div>`
+                                        <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 18H3M17 6H3m18 6H3"/></svg></span>
+                                        <span class="vidscript-popup-body-results-item-text">${value.text}</span>
+                                    </div>`
                                     : ""
                             }
 
@@ -127,8 +130,22 @@ function updatePopupUI(currentResults) {
                     </div>
                 </div>
             `;
-            resultsList.appendChild(li);
-        });
+
+                li.addEventListener("click", () => {
+                    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                        const tab = tabs[0];
+                        if (tab && tab.id) {
+                            chrome.tabs.sendMessage(tab.id, {
+                                type: "load-result",
+                                videoData: currentResults,
+                                resultData: currentResults.results[key],
+                            });
+                        }
+                    });
+                });
+
+                resultsList.appendChild(li);
+            });
     }
 }
 

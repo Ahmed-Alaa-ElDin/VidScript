@@ -118,6 +118,17 @@ const VideoManager = (() => {
         return false;
     };
 
+    // Seek to a specific time in the video
+    const seekTo = (time, shouldPause = false) => {
+        const video = document.querySelector("video");
+        if (video) {
+            video.currentTime = time;
+            if (shouldPause) pauseVideo();
+            return true;
+        }
+        return false;
+    };
+
     // Check if video is currently playing
     const isVideoPlaying = () => {
         const video = document.querySelector("video");
@@ -182,6 +193,7 @@ const VideoManager = (() => {
         captureCurrentFrame,
         pauseVideo,
         playVideo,
+        seekTo,
         isVideoPlaying,
         setupVideoEvents,
         getVideoContext,

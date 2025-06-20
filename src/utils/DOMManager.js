@@ -5,6 +5,7 @@ import VideoManager from "./VideoManager.js";
 import EventManager from "./EventManager.js";
 import ChatService from "./ChatService.js";
 import TextExtractor from "./TextExtractor.js";
+import PopUpService from "./PopUpService.js";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
@@ -451,7 +452,6 @@ const DOMManager = (() => {
 
         textArea.addEventListener("input", () => {
             ConfigManager.updateExtractedImageData({ text: textArea.value });
-            console.log(ConfigManager.get("extractedImageData"));
         });
 
         return sliderContentLeftResults;
@@ -587,7 +587,7 @@ const DOMManager = (() => {
                 NotificationManager.show("No text to copy!", "error");
                 return;
             }
-            
+
             const text = ConfigManager.getExtractedImageData().text;
             navigator.clipboard.writeText(text);
             NotificationManager.show("Text copied to clipboard!", "success");
@@ -609,7 +609,7 @@ const DOMManager = (() => {
         `;
 
         saveResultsBtn.addEventListener("click", () => {
-            ConfigManager.addCurrentResultsToLocalStore();
+            PopUpService.addCurrentResultsToLocalStore();
         });
 
         return saveResultsBtn;
@@ -703,7 +703,7 @@ const DOMManager = (() => {
         body.appendChild(textArea);
 
         const hr = document.createElement("hr");
-        hr.className = "vidscript-popup-body-hr"; 
+        hr.className = "vidscript-popup-body-hr";
         body.appendChild(hr);
 
         const platforms = createPlatformSelectPopupBodyPlatforms();
@@ -718,7 +718,7 @@ const DOMManager = (() => {
 
         // create text area label
         const textAreaLabel = document.createElement("label");
-        textAreaLabel.id = "vidscript-platform-select-popup-body-textarea-label"; 
+        textAreaLabel.id = "vidscript-platform-select-popup-body-textarea-label";
         textAreaLabel.textContent = "Post Text";
         textAreaLabel.htmlFor = "vidscript-platform-select-popup-body-textarea";
         textAreaWrapper.appendChild(textAreaLabel);
@@ -742,7 +742,7 @@ const DOMManager = (() => {
         platforms.forEach((platform) => {
             const platformWrapper = document.createElement("div");
             platformWrapper.id = `vidscript-platform-select-popup-body-platform-${platform.code}`;
-            platformWrapper.className = "vidscript-popup-body-platform-btn"; 
+            platformWrapper.className = "vidscript-popup-body-platform-btn";
             platformWrapper.style.backgroundColor = platform.color;
             platformWrapper.style.color = platform.textColor;
             platformWrapper.addEventListener("mouseenter", () => {
@@ -1064,7 +1064,12 @@ const DOMManager = (() => {
         }
     };
 
-    const addSliderChatMessage = (message, type = "user") => {
+    const addSliderChatMessage = (
+        message,
+        type = "user",
+        timestamp = new Date().toLocaleString(),
+        addMessageToConfig = true
+    ) => {
         marked.use({
             gfm: true,
             breaks: true,
@@ -1087,9 +1092,7 @@ const DOMManager = (() => {
         const messageHeader = document.createElement("div");
         messageHeader.className = "vidscript-slider-chat-message-header";
         messageHeader.textContent =
-            type === "user"
-                ? "You . " + new Date().toLocaleString()
-                : "Assistant . " + new Date().toLocaleString();
+            type === "user" ? "You . " + timestamp : "Assistant . " + timestamp;
         messageContainer.appendChild(messageHeader);
 
         const messageElement = document.createElement("div");
@@ -1121,18 +1124,18 @@ const DOMManager = (() => {
         }
 
         // update chat context
-        ConfigManager.updateExtractedImageData({
-            chat: [
-                ...ConfigManager.getExtractedImageData().chat,
-                {
-                    role: type,
-                    content: message,
-                    timestamp: new Date().toISOString(),
-                },
-            ],
-        });
-
-        console.log(ConfigManager.getExtractedImageData());
+        if (addMessageToConfig) {
+            ConfigManager.updateExtractedImageData({
+                chat: [
+                    ...ConfigManager.getExtractedImageData().chat,
+                    {
+                        role: type,
+                        content: message,
+                        timestamp: new Date().toISOString(),
+                    },
+                ],
+            });
+        }
     };
 
     const resetSlider = () => {

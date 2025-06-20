@@ -5,9 +5,9 @@ import ConfigManager from "./ConfigManager.js";
 const ChatService = (() => {
     const sendMessage = (text) => {
         // Get the latest chat context
-        const chatContext = ConfigManager.get("extractedImageData.chatContext");
-        const videoContext = ConfigManager.get("context.videoContext");
-        
+        const { chatContext } = ConfigManager.getExtractedImageData();
+        const { videoContext } = ConfigManager.getContext();
+
         // Add the user message to the chat
         DOMManager.addSliderChatMessage(text, "user");
 
@@ -17,9 +17,10 @@ const ChatService = (() => {
         const prompt = [
             {
                 role: "system",
-                content: chatContext || videoContext
-                    ? `You are a helpful assistant. Here is the conversation so far:\n\n${chatContext}\n\nThe video context is:\n\n${videoContext}`
-                    : "You are a helpful assistant.",
+                content:
+                    chatContext || videoContext
+                        ? `You are a helpful assistant. Here is the conversation so far:\n\n${chatContext}\n\nThe video context is:\n\n${videoContext}`
+                        : "You are a helpful assistant.",
             },
             {
                 role: "user",
@@ -27,11 +28,8 @@ const ChatService = (() => {
             },
         ];
 
-        console.log("Prompt:", prompt);
-
         // Send the message to the background script
         chrome.runtime.sendMessage({ type: "send-llm-request", prompt }, (response) => {
-            console.log("LLM Response:", response);
             if (response && response.success) {
                 // Hide the chat loading state
                 DOMManager.removeSliderChatLoadingState();
@@ -64,7 +62,6 @@ const ChatService = (() => {
         // Send the message to the background script
         const response = await new Promise((resolve) =>
             chrome.runtime.sendMessage({ type: "send-llm-request", prompt }, (response) => {
-                console.log("LLM Response:", response);
                 resolve(response);
             })
         );
@@ -73,7 +70,7 @@ const ChatService = (() => {
     };
 
     const updateChatContext = async (lastRequest, lastResponse) => {
-        const oldChatContext = ConfigManager.get("extractedImageData.chatContext");
+        const oldChatContext = ConfigManager.getExtractedImageData().chatContext;
 
         const prompt = [
             {
@@ -91,9 +88,8 @@ const ChatService = (() => {
 
         // Send to background for LLM summarization
         chrome.runtime.sendMessage({ type: "send-llm-request", prompt }, (response) => {
-            console.log("Updated Chat Context Response:", response);
             if (response && response.success) {
-                ConfigManager.update("extractedImageData.chatContext", response.result);
+                ConfigManager.updateExtractedImageData({ chatContext: response.result });
             } else {
                 console.error("Failed to update chat context:", response.error);
             }
@@ -110,8 +106,8 @@ const ChatService = (() => {
         // Show the chat loading state
         DOMManager.addSliderChatLoadingState();
 
-        const videoContext = ConfigManager.get("context.videoContext");
-        const ocrText = ConfigManager.getExtractedImageData().text;
+        const { videoContext } = ConfigManager.getContext();
+        const { text } = ConfigManager.getExtractedImageData();
 
         const prompt = [
             {
@@ -121,13 +117,12 @@ const ChatService = (() => {
             },
             {
                 role: "user",
-                content: `Here is the OCR result extracted from a video frame:\n\n${ocrText}\n\nThe video context is:\n\n${videoContext}\n\nPlease rewrite the OCR result so that it is:\n- Grammatically correct\n- Easy to read\n- Aligned with the topic of the video\n- With unclear words intelligently inferred based on the video context\n\nReturn only the improved text.`,
+                content: `Here is the OCR result extracted from a video frame:\n\n${text}\n\nThe video context is:\n\n${videoContext}\n\nPlease rewrite the OCR result so that it is:\n- Grammatically correct\n- Easy to read\n- Aligned with the topic of the video\n- With unclear words intelligently inferred based on the video context\n\nReturn only the improved text.`,
             },
         ];
 
         // Send the message to the background script
         chrome.runtime.sendMessage({ type: "send-llm-request", prompt }, (response) => {
-            console.log("LLM Response:", response);
             if (response && response.success) {
                 // Hide the chat loading state
                 DOMManager.removeSliderChatLoadingState();
@@ -150,8 +145,8 @@ const ChatService = (() => {
         // Show the chat loading state
         DOMManager.addSliderChatLoadingState();
 
-        const videoContext = ConfigManager.get("context.videoContext");
-        const ocrText = ConfigManager.getExtractedImageData().text;
+        const { videoContext } = ConfigManager.getContext();
+        const { text } = ConfigManager.getExtractedImageData();
 
         const prompt = [
             {
@@ -161,13 +156,12 @@ const ChatService = (() => {
             },
             {
                 role: "user",
-                content: `Here's some text extracted from a video frame:\n\n${ocrText}\n\nThe video is about:\n\n${videoContext}\n\nPlease explain the extracted text in a way that a complete beginner can understand. Break down complex terms, use everyday language, and relate it to the video context. Keep it short, friendly, and clear.`,
+                content: `Here's some text extracted from a video frame:\n\n${text}\n\nThe video is about:\n\n${videoContext}\n\nPlease explain the extracted text in a way that a complete beginner can understand. Break down complex terms, use everyday language, and relate it to the video context. Keep it short, friendly, and clear.`,
             },
         ];
 
         // Send the message to the background script
         chrome.runtime.sendMessage({ type: "send-llm-request", prompt }, (response) => {
-            console.log("LLM Response:", response);
             if (response && response.success) {
                 // Hide the chat loading state
                 DOMManager.removeSliderChatLoadingState();
@@ -190,8 +184,8 @@ const ChatService = (() => {
         // Show the chat loading state
         DOMManager.addSliderChatLoadingState();
 
-        const videoContext = ConfigManager.get("context.videoContext");
-        const ocrText = ConfigManager.getExtractedImageData().text;
+        const { videoContext } = ConfigManager.getContext();
+        const { text } = ConfigManager.getExtractedImageData();
 
         const prompt = [
             {
@@ -201,13 +195,12 @@ const ChatService = (() => {
             },
             {
                 role: "user",
-                content: `Here is the OCR result extracted from a video frame:\n\n${ocrText}\n\nThe video context is:\n\n${videoContext}\n\nTranslate the text into '${lang}' while ensuring:\n- Simplicity\n- Clarity\n- Contextual accuracy\n- Beginner-friendly language\n\nReturn only the translated version.`,
+                content: `Here is the OCR result extracted from a video frame:\n\n${text}\n\nThe video context is:\n\n${videoContext}\n\nTranslate the text into '${lang}' while ensuring:\n- Simplicity\n- Clarity\n- Contextual accuracy\n- Beginner-friendly language\n\nReturn only the translated version.`,
             },
         ];
 
         // Send the message to the background script
         chrome.runtime.sendMessage({ type: "send-llm-request", prompt }, (response) => {
-            console.log("LLM Response:", response);
             if (response && response.success) {
                 // Hide the chat loading state
                 DOMManager.removeSliderChatLoadingState();

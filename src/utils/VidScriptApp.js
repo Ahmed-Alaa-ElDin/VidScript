@@ -98,10 +98,6 @@ const VidScriptApp = (() => {
 
             // Remove overlay
             try {
-                // Resume video
-                VideoManager.playVideo();
-
-                // Remove overlay
                 UIFactory.removeVideoOverlay();
             } catch (error) {
                 console.error("❌ Error removing overlay:", error);
@@ -191,7 +187,9 @@ const VidScriptApp = (() => {
         });
 
         EventManager.on("update-results", () => {
-            const resultsSlider = document.querySelector("#vidscript-slider-content-left-results-canvas");
+            const resultsSlider = document.querySelector(
+                "#vidscript-slider-content-left-results-canvas"
+            );
             if (!resultsSlider) {
                 return;
             }
@@ -205,9 +203,6 @@ const VidScriptApp = (() => {
         });
 
         EventManager.on("get-video-context", () => {
-            console.log("get-video-context");
-            console.log(ConfigManager.get("context.videoContext"));
-
             // Check if video has context generated before
             if (ConfigManager.get("context.videoContext") === null) {
                 VideoManager.getVideoContext();
@@ -215,8 +210,12 @@ const VidScriptApp = (() => {
         });
 
         EventManager.on("show-translation-lang-selector-popup", () => {
-            const translationLangSelectorOverlay = document.querySelector("#vidscript-translation-lang-selector-overlay");
-            const translationLangSelectorPopup = document.querySelector("#vidscript-translation-lang-selector-popup");
+            const translationLangSelectorOverlay = document.querySelector(
+                "#vidscript-translation-lang-selector-overlay"
+            );
+            const translationLangSelectorPopup = document.querySelector(
+                "#vidscript-translation-lang-selector-popup"
+            );
             if (translationLangSelectorOverlay && translationLangSelectorPopup) {
                 translationLangSelectorOverlay.classList.add("active");
                 translationLangSelectorPopup.classList.add("active");
@@ -224,8 +223,12 @@ const VidScriptApp = (() => {
         });
 
         EventManager.on("hide-translation-lang-selector-popup", () => {
-            const translationLangSelectorOverlay = document.querySelector("#vidscript-translation-lang-selector-overlay");
-            const translationLangSelectorPopup = document.querySelector("#vidscript-translation-lang-selector-popup");
+            const translationLangSelectorOverlay = document.querySelector(
+                "#vidscript-translation-lang-selector-overlay"
+            );
+            const translationLangSelectorPopup = document.querySelector(
+                "#vidscript-translation-lang-selector-popup"
+            );
             if (translationLangSelectorOverlay && translationLangSelectorPopup) {
                 translationLangSelectorOverlay.classList.remove("active");
                 translationLangSelectorPopup.classList.remove("active");
@@ -233,9 +236,13 @@ const VidScriptApp = (() => {
         });
 
         EventManager.on("show-platform-select-popup", () => {
-            const platformSelectOverlay = document.querySelector("#vidscript-platform-select-overlay");
+            const platformSelectOverlay = document.querySelector(
+                "#vidscript-platform-select-overlay"
+            );
             const platformSelectPopup = document.querySelector("#vidscript-platform-select-popup");
-            const platformSelectTextArea = document.querySelector("#vidscript-platform-select-popup-body-textarea");
+            const platformSelectTextArea = document.querySelector(
+                "#vidscript-platform-select-popup-body-textarea"
+            );
 
             const sharingText = TextExtractor.prepareSharingText();
             platformSelectTextArea.value = sharingText;
@@ -247,7 +254,9 @@ const VidScriptApp = (() => {
         });
 
         EventManager.on("hide-platform-select-popup", () => {
-            const platformSelectOverlay = document.querySelector("#vidscript-platform-select-overlay");
+            const platformSelectOverlay = document.querySelector(
+                "#vidscript-platform-select-overlay"
+            );
             const platformSelectPopup = document.querySelector("#vidscript-platform-select-popup");
             if (platformSelectOverlay && platformSelectPopup) {
                 platformSelectOverlay.classList.remove("active");
@@ -255,39 +264,37 @@ const VidScriptApp = (() => {
             }
         });
 
-        // // Video paused event
-        // EventManager.on("video-paused", () => {
-        //     if (ConfigManager.get("settings.extract")) {
-        //         // Wait a bit to ensure video is fully paused
-        //         setTimeout(() => {
-        //             EventManager.emit("extract-text");
-        //         }, 200);
-        //     }
-        // });
-
-        // // Settings changed event
-        // EventManager.on("setting-changed", ({ key, value }) => {
-        //     // Update UI based on setting
-        //     if (key === "extract") {
-        //         const button = document.querySelector("#vidscript-wrapper");
-        //         if (button) {
-        //             button.classList.toggle("checked", value);
-        //         }
-        //     }
-        // });
-
-        // // Export text event
-        // EventManager.on("export-text", () => {
-        //     NotificationManager.show("Please extract text first", "info");
-        //     EventManager.emit("extract-text");
-        // });
-
         // Show about modal
         EventManager.on("show-about", () => {
             const aboutText =
                 `VidScript v1.0.0 - A YouTube video text extraction tool. \n\nThis extension allows you to extract text from YouTube videos. \n\nSimply click the VidScript button in the video player to extract text. \n\n© ${new Date().getFullYear()} VidScript`.trim();
 
             UIFactory.createModal("About VidScript", aboutText);
+        });
+
+        // Popup events
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            if (message.type === "load-result") {
+                const videoData = {
+                    videoId: message.videoData.videoId,
+                    videoTitle: message.videoData.videoTitle,
+                    videoDescription: message.videoData.videoDescription,
+                    videoContext: message.videoData.videoContext,
+                };
+
+                const resultData = message.resultData;
+                
+                DOMManager.resetSlider();
+                VideoManager.seekTo(resultData.currentTime, true);
+                setTimeout(() => {
+                    ConfigManager.updateState("DONE");
+                    ConfigManager.updateExtractedImageData(resultData);
+                    ConfigManager.updateContext(videoData);
+                    UIFactory.renderResults();
+                }, 100);
+
+                NotificationManager.show("Result loaded successfully", "success");
+            }
         });
     };
 
