@@ -1,7 +1,6 @@
 const cohereKey = import.meta.env.VITE_COHERE_KEY;
 const ocrKey = import.meta.env.VITE_OCR_SPACE_KEY;
 const youtubeApiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
-const pasteBinApiKey = import.meta.env.VITE_PASTEBIN_API_KEY;
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "ocr-space-request" && message.image) {

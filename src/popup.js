@@ -47,6 +47,7 @@ async function loadInitialResults() {
 
 function setupStorageListener() {
     chrome.storage.onChanged.addListener((changes, namespace) => {
+        console.log("change");
         if (namespace === "local" && changes.vidscript_results) {
             currentResults = changes.vidscript_results.newValue[videoId] || {};
             updatePopupUI(currentResults);
@@ -73,18 +74,18 @@ function clearResults() {
 }
 
 function updatePopupUI(currentResults) {
-    const resultCount = Object.keys(currentResults.results).length;
+    const resultCount = Object.keys(currentResults.results || {}).length;
     const resultsCount = `${resultCount} result${resultCount === 1 ? "" : "s"}`;
     document.getElementById("vidscript-popup-header-results-count").textContent = resultsCount;
 
     const resultsList = document.getElementById("vidscript-popup-body-results");
     resultsList.innerHTML = "";
-    if (Object.keys(currentResults.results).length === 0) {
+    if (Object.keys(currentResults.results || {}).length === 0) {
         resultsList.innerHTML =
             "<li class='vidscript-popup-body-results-item vidscript-popup-body-results-item-empty'>No results found</li>";
     } else {
         // Sort results by currentTime lowest to highest
-        Object.entries(currentResults.results)
+        Object.entries(currentResults.results || {})
             .sort((a, b) => a[1].currentTime - b[1].currentTime)
             .forEach(([key, value]) => {
                 const li = document.createElement("li");
