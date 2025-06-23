@@ -65,8 +65,12 @@ const TextExtractor = (() => {
             return;
         }
 
-        navigator.clipboard.writeText(extractedText);
-        NotificationManager.show("Text copied to clipboard!", "success");
+        try {
+            navigator.clipboard.writeText(extractedText);
+            NotificationManager.show("Text copied to clipboard!", "success");
+        } catch (e) {
+            NotificationManager.show("Failed to copy. Please try again.", "error");
+        }
     };
 
     const getSharingText = (length = null) => { 

@@ -42,7 +42,8 @@ const PopUpService = (() => {
             NotificationManager.show("Results saved successfully", "success");
         } catch (error) {
             console.error("Error adding results to local storage:", error);
-            NotificationManager.show("Error adding results to local storage", "error");
+            
+            NotificationManager.show("Error adding results to storage", "error");
         }
     }
 

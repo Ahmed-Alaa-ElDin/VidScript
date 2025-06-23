@@ -82,7 +82,7 @@ function updatePopupUI(currentResults) {
     resultsList.innerHTML = "";
     if (Object.keys(currentResults.results || {}).length === 0) {
         resultsList.innerHTML =
-            "<li class='vidscript-popup-body-results-item vidscript-popup-body-results-item-empty'>No results found</li>";
+            "<li class='vidscript-popup-body-results-item vidscript-popup-body-results-item-empty'>No saved results found for this video</li>";
     } else {
         // Sort results by currentTime lowest to highest
         Object.entries(currentResults.results || {})
