@@ -36,7 +36,7 @@ VidScript is a powerful Chrome extension that empowers users to capture frames f
 
 1. Clone this repository:
 
-git clone [https://github.com/yourusername/vidscript.git](https://github.com/yourusername/vidscript.git)
+git clone [https://github.com/Ahmed-Alaa-ElDin/vidscript.git](https://github.com/Ahmed-Alaa-ElDin/vidscript.git)
 
 2. Install dependencies:
 
@@ -116,15 +116,13 @@ VidScript does not collect or share personal data. All frame captures and extrac
 
 For issues, suggestions, or questions:
 
-* GitHub Issues: [https://github.com/yourusername/vidscript/issues](https://github.com/yourusername/vidscript/issues)
+* GitHub Issues: [https://github.com/Ahmed-Alaa-ElDin/vidscript/issues](https://github.com/Ahmed-Alaa-ElDin/vidscript/issues)
 * Email: [ahmedalaaaldin100@gmail.com](mailto:ahmedalaaaldin100@gmail.com)
 
 🧠 Author
 
 Ahmed Alaa Eldin
 Master’s Degree Candidate – Computer Science
-Supervised by \[Your Supervisor Name Here]
-Faculty of Computers and Information, \[Your University]
 
 📄 License
 
